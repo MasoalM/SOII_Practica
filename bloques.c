@@ -16,7 +16,7 @@ int bmount(const char *camino) {
 int bumount() {
     int cierre = close(descriptor);
     if(cierre == -1) {
-        perror(RED "Error al cerrar la ruta.");
+        perror(RED "Error al cerrar la ruta");
         return FALLO;
     }
     return EXITO;
@@ -26,13 +26,13 @@ int bumount() {
 int bwrite(unsigned int nbloque, const void *buf) {
     off_t desplazamiento = lseek(descriptor, nbloque * BLOCKSIZE, SEEK_SET);
     if(desplazamiento == -1) {
-        perror(RED "Error al desplazar el puntero.");
+        perror(RED "Error al desplazar el puntero");
         return FALLO;
     }
     
     size_t bytes_escritos = write(descriptor, &buf, desplazamiento);
     if(bytes_escritos == -1) {
-        perror(RED "Error al escribir un bloque.");
+        perror(RED "Error al escribir un bloque");
         return FALLO;
     }
     return BLOCKSIZE;
@@ -41,13 +41,13 @@ int bwrite(unsigned int nbloque, const void *buf) {
 int bread(unsigned int nbloque, void *buf) {
     off_t desplazamiento = lseek(descriptor, nbloque * BLOCKSIZE, SEEK_SET);
     if(desplazamiento == -1) {
-        perror(RED "Error al desplazar el puntero.");
+        perror(RED "Error al desplazar el puntero");
         return FALLO;
     }
 
     size_t bytes_leidos = read(descriptor, &buf, desplazamiento);
     if(bytes_leidos < BLOCKSIZE) {
-        perror(RED "Error al leer un bloque.");
+        perror(RED "Error al leer un bloque");
         return FALLO;
     }
     return BLOCKSIZE;
