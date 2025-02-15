@@ -46,7 +46,7 @@ int bread(unsigned int nbloque, void *buf) {
     }
 
     size_t bytes_leidos = read(descriptor, &buf, desplazamiento);
-    if(bytes_leidos < BLOCKSIZE) {
+    if(bytes_leidos == -1) {
         perror(RED "Error al leer un bloque");
         return FALLO;
     }
