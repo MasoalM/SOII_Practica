@@ -44,7 +44,7 @@ int bwrite(unsigned int nbloque, const void *buf) {
         return FALLO;
     }
     
-    size_t bytes_escritos = write(descriptor, &buf, desplazamiento);
+    size_t bytes_escritos = write(descriptor, buf, BLOCKSIZE);
     if(bytes_escritos == -1) {
         perror(RED "Error al escribir un bloque");
         return FALLO;

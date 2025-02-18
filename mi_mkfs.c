@@ -1,5 +1,4 @@
 #include "bloques.h"
-#include "bloques.c"
 #include <string.h>
 
 // Método main
@@ -7,7 +6,7 @@
 // Parámetros de entrada: argc (número de argumentos) y argv (array que contiene los argumentos)
 // Salida: Devuelve -1 (FALLO) en caso de error y 0 (EXITO) en caso de ejecución exitosa
 int main(int argc, char **argv) {
-    unsigned char *buffer [BLOCKSIZE];
+    unsigned char buffer [BLOCKSIZE];
     memset(buffer, '\0', sizeof(buffer));
 
     if(argc < 3) {
