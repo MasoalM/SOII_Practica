@@ -64,10 +64,10 @@ int bread(unsigned int nbloque, void *buf) {
         return FALLO;
     }
 
-    size_t bytes_leidos = read(descriptor, &buf, desplazamiento);
+    size_t bytes_leidos = read(descriptor, buf, BLOCKSIZE);
     if(bytes_leidos == -1) {
         perror(RED "Error al leer un bloque");
         return FALLO;
     }
-    return BLOCKSIZE;
+    return bytes_leidos;
 }

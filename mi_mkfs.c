@@ -1,4 +1,4 @@
-#include "bloques.h"
+#include "ficheros_basico.h"
 #include <string.h>
 
 // Método main
@@ -18,11 +18,13 @@ int main(int argc, char **argv) {
         return FALLO;
     }
     bmount(argv[1]);
-    
+
     int num_bloques = atoi(argv[2]);
     for(int i = 0; i < num_bloques; i++) {
         bwrite(i, buffer);
     }
+
+    //tamAI(num_bloques, num_bloques/4) en algún momento
 
     bumount();
 
