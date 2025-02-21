@@ -42,19 +42,32 @@ int initSB(unsigned int nbloques, unsigned int ninodos) {
 
 int initMB() {
     unsigned char bufferMB [BLOCKSIZE];
+    memset(bufferMB, 1, BLOCKSIZE);
+    int bloques = tamSB + tamAI(SB.totInodos) + tamMB(SB.totBloques); // cantidad de bloques representados por 1 bit
     
-    int bloques = tamSB + tamAI(SB.totInodos) + tamMB(SB.totBloques); // bloques
-    int bits = (bloques/8) / BLOCKSIZE; // bits
+    int nbloques = (bloques/8) / BLOCKSIZE; // nbloques físicos
     SB.cantBloquesLibres -= bloques;    // se restan todos los bloques de metadatos de los bloques libres
-
-    for(int i = 0; i < bits; i++) {
+    int i = 0
+    for(; i < nbloques; i++) {
         for(int j = 0; j < BLOCKSIZE; j++) {
-            
+            bwrite(SB.posPrimerBloqueMB+i,bufferMB);
         }
     }
-
-    
-    
+    int resto = (bloques%8);   //bits sueltos
+    memset(bufferMB, 0, BLOCKSIZE);
+    bloques=/8;
+    //bloques virtuales (1 bit = 1 bloque) que no completan un bloque físico
+    int k=0;
+    for(;k<bloques;k++){
+        bufferMB[k]=255;    
+    }
+    //bits sobrantes
+    int valor = 0;
+    for(int j = 0; j < resto; j++){
+        valor += pow(2,7 - j);
+    }
+    bufferMB[k]=valor;
+    bwrite(SB.posPrimerBloqueMB+i,bufferMB);
 }
 
 int initAI() {
