@@ -8,25 +8,24 @@
 int main(int argc, char **argv) {
     unsigned char buffer [BLOCKSIZE];
     memset(buffer, '\0', sizeof(buffer));
-
-    if(argc < 3) {
-        perror("Error, faltan argumentos: $ ./mi_mkfs <nombre_dispositivo> <nbloques>");
-        return FALLO;
-    } 
-    if(strcmp(argv[0], "./mi_mkfs") != 0) {
-        perror("Error de sintaxis");
+    
+    if(argc != 3) {
+        perror("Error, faltan o sobran argumentos: $ ./mi_mkfs <nombre_dispositivo> <nbloques>");
         return FALLO;
     }
-    bmount(argv[1]);
+
+    if(bmount(argv[1])==FALLO) return FALLO;
 
     int num_bloques = atoi(argv[2]);
     for(int i = 0; i < num_bloques; i++) {
         bwrite(i, buffer);
     }
+    
+    initSB(num_bloques, num_bloques/4);
+    initMB();
+    initAI();
 
-    //tamAI(num_bloques, num_bloques/4) en algún momento
-
-    bumount();
+    if(bumount() == FALLO) return FALLO;
 
     return EXITO;
 }

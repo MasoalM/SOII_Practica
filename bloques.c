@@ -11,7 +11,7 @@ static int descriptor = 0;
 int bmount(const char *camino) {
     umask(000);
     descriptor = open(camino, O_CREAT | O_RDWR, 0666);
-    if(descriptor == -1) {
+    if(descriptor == FALLO) {
         perror(RED "Error al abrir la ruta");
         return FALLO;
     }
@@ -25,7 +25,7 @@ int bmount(const char *camino) {
 // Dónde se utiliza: Main de mi_mkfs
 int bumount() {
     int cierre = close(descriptor);
-    if(cierre == -1) {
+    if(cierre == FALLO) {
         perror(RED "Error al cerrar la ruta");
         return FALLO;
     }
@@ -39,13 +39,13 @@ int bumount() {
 // Dónde se utiliza: Main de mi_mkfs
 int bwrite(unsigned int nbloque, const void *buf) {
     off_t desplazamiento = lseek(descriptor, nbloque * BLOCKSIZE, SEEK_SET);
-    if(desplazamiento == -1) {
+    if(desplazamiento == FALLO) {
         perror(RED "Error al desplazar el puntero");
         return FALLO;
     }
     
     size_t bytes_escritos = write(descriptor, buf, BLOCKSIZE);
-    if(bytes_escritos == -1) {
+    if(bytes_escritos == FALLO) {
         perror(RED "Error al escribir un bloque");
         return FALLO;
     }
@@ -59,13 +59,13 @@ int bwrite(unsigned int nbloque, const void *buf) {
 // Dónde se utiliza: Main de mi_mkfs
 int bread(unsigned int nbloque, void *buf) {
     off_t desplazamiento = lseek(descriptor, nbloque * BLOCKSIZE, SEEK_SET);
-    if(desplazamiento == -1) {
+    if(desplazamiento == FALLO) {
         perror(RED "Error al desplazar el puntero");
         return FALLO;
     }
 
     size_t bytes_leidos = read(descriptor, buf, BLOCKSIZE);
-    if(bytes_leidos == -1) {
+    if(bytes_leidos == FALLO) {
         perror(RED "Error al leer un bloque");
         return FALLO;
     }
