@@ -29,39 +29,24 @@ int main(int argc, char **argv) {
     printf("cantBloquesLibres = %d\n",SB.cantBloquesLibres);
     printf("cantInodosLibres = %d\n",SB.cantInodosLibres);
     printf("totBloques = %d\n", SB.totBloques);
-    printf("totInodos = %d\n", SB.totInodos);
+    printf("totInodos = %d\n\n", SB.totInodos);
     
-    printf("sizeof struct superbloque is: %lu\n", sizeof(struct superbloque));
-    printf("sizeof struct inodo is: %lu\n", sizeof(struct inodo));
+    printf("sizeof struct superbloque: %lu\n", sizeof(struct superbloque));
+    printf("sizeof struct inodo: %lu\n\n", sizeof(struct inodo));
 
-    printf("RECORRIDO LISTA ENLAZADA INODOS LIBRES");
+    /*
+    printf("RECORRIDO LISTA ENLAZADA DE INODOS LIBRES\n");
     for(int i = SB.posPrimerBloqueAI; i <= SB.posUltimoBloqueAI; i++) {
         if (bread(i, inodos) == FALLO){
             perror(RED "Error al leer el array de inodos");
             return FALLO;
         }
         for(int j = 0; j < BLOCKSIZE / INODOSIZE; j++) {
-            printf("%d ", inodos[i].punterosDirectos[0]);
-            fflush(stdout);
+            printf("%d ", inodos[j].punterosDirectos[0]);
         }    
     }
     printf("\n");
-
-    /*
-    for(unsigned int i = SB.posPrimerBloqueAI; i <= SB.posUltimoBloqueAI; i++){
-        if (bread(i, AI) == FALLO){
-            fprintf(stderr, RED "ERROR: no se ha podido leer el superbloque"RESET);
-            return FALLO;
-        }
-        for(int j = 0; j < BLOCKSIZE / INODOSIZE; j++){
-            printf("%d ", AI[j].punterosDirectos[0]);
-            fflush(stdout);
-        }
-    }
-    printf("\n");
-
     */
-
     if (bumount() == FALLO) return FALLO;
 
     return EXITO;

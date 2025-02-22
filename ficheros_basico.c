@@ -14,7 +14,6 @@ int potencia(int base, int exponente) {
 
 int tamMB(unsigned int nbloques) {
     int resultado = (nbloques / 8) / BLOCKSIZE;
-    // nbloques % 8 ?
     if((nbloques / 8) % BLOCKSIZE > 0) return (resultado+1);
     return resultado;
 }
@@ -95,8 +94,7 @@ int initMB() {
 }
 
 int initAI() {
-    printf("SBcantblocslibres3: %d\n",SB.cantBloquesLibres);
-    int contInodos = SB.posPrimerInodoLibre + 1;     //si hemos inicializado SB.posPrimerInodoLibre = 0
+    int contInodos = SB.posPrimerInodoLibre + 1;     // hemos inicializado SB.posPrimerInodoLibre = 0
     for(int i = SB.posPrimerBloqueAI; i <= SB.posUltimoBloqueAI; i++) { //para cada bloque del AI
         if(bread(i, inodos) != FALLO){  //gestión de errores
             for(int j = 0; j < BLOCKSIZE / INODOSIZE; j++) {    //para cada inodo del bloque
@@ -109,7 +107,7 @@ int initAI() {
                     break; 
                 }
             }
-            //escribimos el inodo en la máquina virtual
+            //escribimos el bloque de inodos i en el dispositivo virtual
             if(bwrite(i, inodos)==FALLO){
                 perror(RED "Error al iniciar el array de inodos");
                 return FALLO;
