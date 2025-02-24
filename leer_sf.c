@@ -2,7 +2,7 @@
 
 int main(int argc, char **argv) {   
     struct superbloque SB;
-    struct inodo inodos[BLOCKSIZE / INODOSIZE];
+    //struct inodo inodos[BLOCKSIZE / INODOSIZE];
     char *nombreArchivo = argv[1];
 
     if(argc != 2) {

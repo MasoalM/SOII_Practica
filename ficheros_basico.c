@@ -48,47 +48,59 @@ int initSB(unsigned int nbloques, unsigned int ninodos) {
     return EXITO;
 }
 
-int initMB() {
-    unsigned int bufferSB [BLOCKSIZE]; 
-    unsigned char bufferMB [BLOCKSIZE];
-    memset(bufferMB, 1, BLOCKSIZE);
-    int bloques = tamSB + tamAI(SB.totInodos) + tamMB(SB.totBloques); // cantidad de bloques representados por 1 bit
-    
-    int nbloques = (bloques/8) / BLOCKSIZE; // nbloques físicos
-    SB.cantBloquesLibres -= bloques;    // se restan todos los bloques de metadatos de los bloques libres
-    int i = 0;
-    for(; i < nbloques; i++) {
-        for(int j = 0; j < BLOCKSIZE; j++) {
-            if(bwrite(SB.posPrimerBloqueMB+i,bufferMB) == FALLO) {
-                perror(RED "Error al escribir el mapa de bits");
-                return FALLO;
-            }
+
+int initMB() { 
+    unsigned char bufferMB[BLOCKSIZE];
+
+    if (bread(posSB, &SB) == FALLO) return FALLO;
+
+    // Cantidad de bloques ocupados por metadatos (representados por bits)
+    unsigned int bloquesMetadatos = tamSB + tamAI(SB.totInodos) + tamMB(SB.totBloques);
+
+    // Convertimos los bits en bloques físicos
+    unsigned int bloquesOcupados = bloquesMetadatos / 8 / BLOCKSIZE;
+    unsigned int bytesOcupados = bloquesMetadatos / 8;
+    unsigned int bitsRestantes = bloquesMetadatos % 8;
+
+    // Restar bloques ocupados del superbloque
+    SB.cantBloquesLibres -= bloquesMetadatos;
+
+    // Escribir bloques completos del mapa de bits
+    for (unsigned int i = 0; i < bloquesOcupados; i++) {
+        memset(bufferMB, 255, BLOCKSIZE);  // 11111111 en cada byte
+        if (bwrite(SB.posPrimerBloqueMB + i, bufferMB) == FALLO) {
+            perror(RED "Error al escribir el mapa de bits");
+            return FALLO;
         }
     }
-    int resto = (bloques%8);   //bits sueltos
+
+    // Preparar el bloque parcial
     memset(bufferMB, 0, BLOCKSIZE);
-    bloques/=8;
-    //bloques virtuales (1 bit = 1 bloque) que no completan un bloque físico
-    int k=0;
-    for(;k<bloques;k++){
-        bufferMB[k]=255;
+    unsigned int bytesParciales = bytesOcupados - (bloquesOcupados * BLOCKSIZE);
+
+    // Rellenar los bytes completos del bloque parcial
+    for (unsigned int i = 0; i < bytesParciales; i++) {
+        bufferMB[i] = 255;
     }
-    //bits sobrantes
-    int valor = 0;
-    for(int j = 0; j < resto; j++){
+
+    unsigned int valor = 0;
+    for(unsigned int j = 0; j < bitsRestantes; j++){
         valor += (int) potencia(2,(7 - j));
     }
-    bufferMB[k]=valor;
-    if(bwrite(SB.posPrimerBloqueMB+i,bufferMB) == FALLO) {
-        perror(RED "Error al escribir el mapa de bits");
+    bufferMB[bytesParciales]=valor;
+
+    // Escribir el bloque parcial si hay datos que guardar
+    if (bwrite(SB.posPrimerBloqueMB + bloquesOcupados, bufferMB) == FALLO) {
+        perror(RED "Error al escribir el bloque parcial del mapa de bits");
         return FALLO;
     }
-    memset(bufferSB, 0, BLOCKSIZE * sizeof(unsigned int));
-    memcpy(bufferSB, &SB, sizeof(struct superbloque));
-    if (bwrite(posSB, bufferSB) == FALLO) {
+
+    // Escribir el superbloque actualizado
+    if (bwrite(posSB, &SB) == FALLO) {
         perror(RED "Error al escribir el superbloque");
         return FALLO;
     }
+
     return EXITO;
 }
 
