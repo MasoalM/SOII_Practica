@@ -2,7 +2,6 @@
 #include <limits.h>
 
 struct superbloque SB;  // Superbloque
-struct inodo inodos[BLOCKSIZE/INODOSIZE]; // inodos
 
 int potencia(int base, int exponente) {
     int resultado = 1;
@@ -94,6 +93,7 @@ int initMB() {
 }
 
 int initAI() {
+    struct inodo inodos[BLOCKSIZE/INODOSIZE]; // inodos
     int contInodos = SB.posPrimerInodoLibre + 1;     // hemos inicializado SB.posPrimerInodoLibre = 0
     for(int i = SB.posPrimerBloqueAI; i <= SB.posUltimoBloqueAI; i++) { //para cada bloque del AI
         if(bread(i, inodos) != FALLO){  //gestión de errores
