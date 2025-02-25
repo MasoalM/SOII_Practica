@@ -1,8 +1,6 @@
 #include "ficheros_basico.h"
 #include <limits.h>
 
-struct superbloque SB;  // Superbloque
-
 int potencia(int base, int exponente) {
     int resultado = 1;
     for (int i = 0; i < exponente; i++) {
@@ -24,6 +22,7 @@ int tamAI(unsigned int ninodos) {
 }
 
 int initSB(unsigned int nbloques, unsigned int ninodos) {
+    struct superbloque SB;  // Superbloque
     unsigned int bufferSB [BLOCKSIZE];       
     SB.posPrimerBloqueMB = posSB + tamSB;       //Posición del primer bloque del mapa de bits 
     SB.posUltimoBloqueMB = SB.posPrimerBloqueMB + tamMB(nbloques) - 1;  //Posición del último bloque del mapa de bits 
@@ -50,9 +49,10 @@ int initSB(unsigned int nbloques, unsigned int ninodos) {
 
 
 int initMB() { 
+    struct superbloque SB;  // Superbloque
     unsigned char bufferMB[BLOCKSIZE];
 
-    if (bread(posSB, &SB) == FALLO) return FALLO;
+    if (bread(posSB, &SB) == FALLO) return FALLO; //gestión de errores
 
     // Cantidad de bloques ocupados por metadatos (representados por bits)
     unsigned int bloquesMetadatos = tamSB + tamAI(SB.totInodos) + tamMB(SB.totBloques);
@@ -105,6 +105,8 @@ int initMB() {
 }
 
 int initAI() {
+    struct superbloque SB;  // Superbloque
+    if (bread(posSB, &SB) == FALLO) return FALLO; //gestión de errores
     struct inodo inodos[BLOCKSIZE/INODOSIZE]; // inodos
     int contInodos = SB.posPrimerInodoLibre + 1;     // hemos inicializado SB.posPrimerInodoLibre = 0
     for(int i = SB.posPrimerBloqueAI; i <= SB.posUltimoBloqueAI; i++) { //para cada bloque del AI
