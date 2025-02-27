@@ -134,3 +134,67 @@ int initAI() {
     }
     return EXITO;
 }
+
+
+//INICIO NIVEL 3
+int escribir_bit(unsigned int nbloque, unsigned int bit){
+
+    int posByte=nbloque/8;
+
+    int posBit=nbloque%8;
+
+    unsigned char mascara=128; // 10000000
+
+    mascara >>=posBit; // desplazamiento de bits a la derecha
+
+    struct superbloque SB;
+
+    if(bread(posSB,&SB)==FALLO) return FALLO;
+
+    unsigned char bufferMB[BLOCKSIZE];
+
+    if(bread(SB.posPrimerBloqueMB,bufferMB)==FALLO) return FALLO;
+
+    if(bit==0){
+        bufferMB[posByte] &= ~mascara; //poner a 0 el bit indicado
+    }else{
+        bufferMB[posByte] /= mascara; //poner a 1 el bit indicado
+    }
+
+    if(bwrite(SB.posPrimerBloqueMB,bufferMB)==FALLO) return FALLO;
+
+    return EXITO;
+}
+
+char leer_bit(unsigned int nbloque){
+    unsigned char bufferMB[BLOCKSIZE];
+
+    unsigned char mascara = 128; // 10000000
+    mascara >>= posbit;          // desplazamiento de bits a la derecha, los que indique posbit
+    mascara &= bufferMB[posbyte]; // operador AND para bits
+    mascara >>= (7 - posbit);     // desplazamiento de bits a la derecha 
+                                  // para dejar el 0 o 1 en el extremo derecho y leerlo en decimal
+    return mascara;
+}
+
+int reservar_bloque(){
+
+    struct superbloque SB;
+    if(bread(posSB, &SB)==FALLO) return FALLO;
+    if(SB.cantBloquesLibres==0) return FALLO;
+
+    int nbloqueMB=SB.posPrimerBloqueDatos;
+    unsigned char bufferMB[BLOCKSIZE];
+    unsigned char bufferAux[BLOCKSIZE];
+
+    memset(bufferAux, 255, BLOCKSIZE); // llenamos el buffer auxiliar con bits a 1
+    bread(nbloqueMB + SB.posPrimerBloqueMB , bufferMB);
+
+    while(memcmp(bufferAux, bufferMB, BLOCKSIZE)==0){
+        nbloqueMB++;
+        bread(nbloqueMB + SB.posPrimerBloqueMB, bufferMB);
+    }
+
+
+}
+
