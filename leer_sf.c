@@ -47,6 +47,39 @@ int main(int argc, char **argv) {
     }
     printf("\n");
     */
+
+    // reservar y liberar bloque
+    printf("RESERVAMOS UN BLOQUE Y LUEGO LO LIBERAMOS\n");
+    unsigned int bloqueReservado = reservar_bloque();
+    printf("Se ha reservado el bloque físico número %d que era el primero libre indicado por el MB\n", bloqueReservado);
+    printf("SB.cantidadBloquesLibres = %d\n", SB.cantBloquesLibres);
+    liberar_bloque(bloqueReservado);
+    printf("Liberamos ese bloque y después SB.cantidadBloquesLibres = %d\n", SB.cantBloquesLibres);
+
+    printf("MAPA DE BITS CON BLOQUES DE METADATOS OCUPADOS\n");
+    printf("leer_bit(0) -> %d\n", leer_bit(0));
+    printf("leer_bit(SB.posPrimerBloqueMB) -> %d\n", leer_bit(SB.posPrimerBloqueMB));
+    printf("leer_bit(SB.posUltimoBloqueMB) -> %d\n", leer_bit(SB.posUltimoBloqueMB));
+    printf("leer_bit(SB.posPrimerBloqueAI) -> %d\n", leer_bit(SB.posPrimerBloqueAI));
+    printf("leer_bit(SB.posUltimoBloqueAI) -> %d\n", leer_bit(SB.posUltimoBloqueAI));
+    printf("leer_bit(SB.posPrimerBloqueDatos) -> %d\n", leer_bit(SB.posPrimerBloqueDatos));
+    printf("leer_bit(SB.posUltimoBloqueDatos) -> %d\n", leer_bit(SB.posUltimoBloqueDatos));
+    
+    // mostrar el inodo raiz
+    printf("DATOS DEL DIRECTORIO RAÍZ\n");
+    //printf("tipo: %c", )
+    //printf("permisos: ")
+    /*
+        "SEGUIR CON ESO"
+        atime: Tue 2021-03-09 18:16:08
+        mtime: Tue 2021-03-09 18:16:08
+        ctime: Tue 2021-03-09 18:16:08
+        btime: Tue 2021-03-09 18:16:08
+        nlinks: 1
+        tamEnBytesLog: 0
+        numBloquesOcupados: 0
+    */
+
     if (bumount() == FALLO) return FALLO;
 
     return EXITO;

@@ -25,6 +25,8 @@ int main(int argc, char **argv) {
     initMB();
     initAI();
 
+    reservar_inodo('d', 7);
+
     if(bumount() == FALLO) return FALLO;
 
     return EXITO;
