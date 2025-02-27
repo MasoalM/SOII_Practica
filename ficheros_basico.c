@@ -135,16 +135,15 @@ int initAI() {
     return EXITO;
 }
 
-
 //INICIO NIVEL 3
 int escribir_bit(unsigned int nbloque, unsigned int bit){
 
     struct superbloque SB;
-    if(bread(posSB,&SB)==FALLO) return FALLO;
+    if(bread(posSB, &SB) == FALLO) return FALLO;
 
-    unsigned int posByte=nbloque/8;
+    unsigned int posByte = nbloque/8;
 
-    unsigned int posBit=nbloque%8;
+    unsigned int posBit = nbloque%8;
 
     unsigned int nbloqueMB = posByte / BLOCKSIZE;
 
@@ -154,9 +153,9 @@ int escribir_bit(unsigned int nbloque, unsigned int bit){
 
     posByte = posByte % BLOCKSIZE;
 
-    if(bread(SB.posPrimerBloqueMB,bufferMB)==FALLO) return FALLO;
+    if(bread(SB.posPrimerBloqueMB,bufferMB) == FALLO) return FALLO;
 
-    unsigned char mascara=128; // 10000000
+    unsigned char mascara = 128; // 10000000
 
     mascara >>= posBit; // desplazamiento de bits a la derecha
 
@@ -166,7 +165,7 @@ int escribir_bit(unsigned int nbloque, unsigned int bit){
         bufferMB[posByte] &= ~mascara; //poner a 0 el bit indicado
     }
 
-    if(bwrite(nbloqueabs,bufferMB)==FALLO) return FALLO;
+    if(bwrite(nbloqueabs, bufferMB) == FALLO) return FALLO;
 
     return EXITO;
 }
@@ -174,17 +173,19 @@ int escribir_bit(unsigned int nbloque, unsigned int bit){
 char leer_bit(unsigned int nbloque){
 
     struct superbloque SB;
-    if(bread(posSB,&SB)==FALLO) return FALLO;
+    if(bread(posSB, &SB) == FALLO) return FALLO;
 
-    unsigned int posByte=nbloque/8;
+    unsigned int posByte = nbloque / 8;
 
-    unsigned int posBit=nbloque%8;
+    unsigned int posBit = nbloque % 8;
 
     unsigned int nbloqueMB = posByte / BLOCKSIZE;
 
     unsigned int nbloqueabs = SB.posPrimerBloqueMB + nbloqueMB;
 
     unsigned char bufferMB[BLOCKSIZE];
+
+    if(bread(nbloqueabs, bufferMB) == FALLO) return FALLO;
 
     posByte = posByte % BLOCKSIZE;
 
@@ -202,28 +203,28 @@ int reservar_bloque(){
     //declaramos variables
     struct superbloque SB;
     //gestión de errores
-    if(bread(posSB, &SB)==FALLO) return FALLO;
-    if(SB.cantBloquesLibres==0) return FALLO;
+    if(bread(posSB, &SB) == FALLO) return FALLO;
+    if(SB.cantBloquesLibres == 0) return FALLO;
 
     //vamos a gestionar el buffer
-    unsigned int nbloqueMB=SB.posPrimerBloqueDatos;
+    unsigned int nbloqueMB = SB.posPrimerBloqueDatos;
     unsigned char bufferMB[BLOCKSIZE];
     unsigned char bufferAux[BLOCKSIZE];
 
     memset(bufferAux, 255, BLOCKSIZE); // llenamos el buffer auxiliar con bits a 1
     //hacemos la primera lectura para entrar en el bucle
-    if(bread(nbloqueMB + SB.posPrimerBloqueMB , bufferMB)==FALLO) return FALLO;
+    if(bread(nbloqueMB + SB.posPrimerBloqueMB, bufferMB) == FALLO) return FALLO;
 
     //bucle de búsqueda del bloque con un byte libre
-    while(memcmp(bufferAux, bufferMB, BLOCKSIZE)==0){
+    while(memcmp(bufferAux, bufferMB, BLOCKSIZE) == 0){
         nbloqueMB++;
-        if(bread(nbloqueMB + SB.posPrimerBloqueMB, bufferMB)==FALLO)return FALLO;
+        if(bread(nbloqueMB + SB.posPrimerBloqueMB, bufferMB) == FALLO) return FALLO;
     }
 
     //paso 2
     //buscamos el byte con el bit libre
-    unsigned int posbyte=0;
-    for(;bufferMB[posbyte]==255;posbyte++){};
+    unsigned int posbyte = 0;
+    for(; bufferMB[posbyte] == 255; posbyte++);
 
     //paso 3
     //gestionamos el bit libre
@@ -238,14 +239,14 @@ int reservar_bloque(){
     //finalizamos
 
     //calculamos en número de bloque real
-    int nBloqueFisico = (nbloqueMB * BLOCKSIZE * 8) +  (posbyte * 8) + posbit;
+    int nBloqueFisico = (nbloqueMB * BLOCKSIZE * 8) + (posbyte * 8) + posbit;
 
     //guardamos los datos, y gestionsmos la información obtenida
-    if(escribir_bit(nBloqueFisico,1)==FALLO) return FALLO;
+    if(escribir_bit(nBloqueFisico, 1) == FALLO) return FALLO;
     SB.cantBloquesLibres--;
-    if(bwrite(posSB,&SB)==FALLO) return FALLO;
-    memset(bufferAux,0,BLOCKSIZE);
-    if(bwrite(nBloqueFisico, bufferAux)==FALLO) return FALLO;
+    if(bwrite(posSB, &SB) == FALLO) return FALLO;
+    memset(bufferAux, 0, BLOCKSIZE);
+    if(bwrite(nBloqueFisico, bufferAux) == FALLO) return FALLO;
     return nBloqueFisico;
 }
 
@@ -253,9 +254,9 @@ int reservar_bloque(){
 int liberar_bloque(unsigned int nbloque) {
     //iniciamos el superbloque
     struct superbloque SB;
-    if(bread(posSB, &SB)==FALLO) return FALLO;
+    if(bread(posSB, &SB) == FALLO) return FALLO;
     //ponemos a 0 el bloque que nos dicen (lo liberamos)
-    if(escribir_bit(nbloque, 0)==FALLO) return FALLO;
+    if(escribir_bit(nbloque, 0) == FALLO) return FALLO;
     //aumentamos el número de bloques libres
     SB.cantBloquesLibres++;
     //guardamos el superbloque
@@ -270,13 +271,12 @@ int escribir_inodo(unsigned int ninodo, struct inodo *inodo){
      
     //Tratamiento de errores
     struct superbloque SB;
-    if(bread(posSB, &SB)==FALLO) return FALLO;
-
+    if(bread(posSB, &SB) == FALLO) return FALLO;
     struct inodo inodos[BLOCKSIZE / INODOSIZE];
-    unsigned int nbloqueAI = (ninodo*INODOSIZE)/BLOCKSIZE;
+    unsigned int nbloqueAI = (ninodo * INODOSIZE) / BLOCKSIZE;
     unsigned int nbloqueabs = nbloqueAI + SB.posPrimerBloqueAI;
     bread(nbloqueabs, inodos);
-    unsigned int posinodo = ninodo % (BLOCKSIZE/INODOSIZE);
+    unsigned int posinodo = ninodo % (BLOCKSIZE / INODOSIZE);
     inodos[posinodo] = *inodo;
     bwrite(nbloqueabs, inodos);
     
@@ -287,7 +287,7 @@ int leer_inodo(unsigned int ninodo, struct inodo *inodo) {
     struct superbloque SB;
     // Leer el superbloque para obtener la localización del array de inodos
     if (bread(posSB, &SB) == FALLO) {
-        perror("Error al leer el superbloque");
+        perror(RED "Error al leer el superbloque");
         return FALLO;  // Usar un código de error adecuado
     }
 
@@ -298,7 +298,7 @@ int leer_inodo(unsigned int ninodo, struct inodo *inodo) {
     struct inodo inodos[BLOCKSIZE / INODOSIZE];
     // Leer el bloque de inodos que contiene el inodo deseado
     if (bread(nbloqueabs, inodos) == FALLO) {
-        perror("Error al leer el bloque de inodos");
+        perror(RED "Error al leer el bloque de inodos");
         return FALLO;
     }
 
@@ -315,19 +315,39 @@ int reservar_inodo(unsigned char tipo, unsigned char permisos) {
     struct superbloque SB;
     // Leer el superbloque para obtener la localización del array de inodos
     if (bread(posSB, &SB) == FALLO) {
-        perror("Error al leer el superbloque");
+        perror(RED "Error al leer el superbloque");
         return FALLO;  // Usar un código de error adecuado
     }
-    if(SB.posPrimerInodoLibre==0){
-        perror(RED, "no hay inodos disponibles");
+    if(SB.posPrimerInodoLibre == UINT_MAX) {
+        perror(RED "no hay inodos disponibles");
         return FALLO;
     }
-    unsigned int reservarInodo=SB.posPrimerInodoLibre;
-    struct inodo inodos[BLOCKSIZE / INODOSIZE];
-    
-    struct inodo inodos;
-    
+    unsigned int posInodoReservado = SB.posPrimerInodoLibre;
+    struct inodo inodoR;
+    inodoR.permisos = permisos;
+    inodoR.tipo = tipo;
 
+    inodoR.nlinks = 1;
+
+    inodoR.tamEnBytesLog = 0;
+    inodoR.atime = time(NULL);
+    inodoR.btime = time(NULL);
+    inodoR.ctime = time(NULL);
+    inodoR.mtime = time(NULL);
+    inodoR.numBloquesOcupados = 0;
+
+    memset(inodoR.punterosDirectos, 0, sizeof(inodoR.punterosDirectos));
+    memset(inodoR.punterosIndirectos, 0, sizeof(inodoR.punterosIndirectos));
+
+    escribir_inodo(posInodoReservado, &inodoR);
+
+    SB.cantInodosLibres--;
+
+    if (bwrite(posSB, &SB) == FALLO) {
+        perror(RED "Error al escribir el superbloque");
+        return FALLO;
+    }
+
+    return posInodoReservado;
 }
-
 

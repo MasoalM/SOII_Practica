@@ -2,7 +2,9 @@
 
 int main(int argc, char **argv) {   
     struct superbloque SB;
-    //struct inodo inodos[BLOCKSIZE / INODOSIZE];
+    
+    struct inodo inodoRaiz;
+
     char *nombreArchivo = argv[1];
 
     if(argc != 2) {
@@ -14,6 +16,11 @@ int main(int argc, char **argv) {
 
     if(bread(posSB, &SB) == FALLO) {
         perror(RED "Error al leer el superbloque");
+        return FALLO;
+    }
+
+    if(leer_inodo(SB.posInodoRaiz, &inodoRaiz) == FALLO) {
+        perror(RED "Error al leer el inodo raíz");
         return FALLO;
     }
 
@@ -57,7 +64,7 @@ int main(int argc, char **argv) {
     printf("Liberamos ese bloque y después SB.cantidadBloquesLibres = %d\n", SB.cantBloquesLibres);
 
     printf("MAPA DE BITS CON BLOQUES DE METADATOS OCUPADOS\n");
-    printf("leer_bit(0) -> %d\n", leer_bit(0));
+    printf("leer_bit(posSB) -> %d\n", leer_bit(posSB));
     printf("leer_bit(SB.posPrimerBloqueMB) -> %d\n", leer_bit(SB.posPrimerBloqueMB));
     printf("leer_bit(SB.posUltimoBloqueMB) -> %d\n", leer_bit(SB.posUltimoBloqueMB));
     printf("leer_bit(SB.posPrimerBloqueAI) -> %d\n", leer_bit(SB.posPrimerBloqueAI));
@@ -67,19 +74,34 @@ int main(int argc, char **argv) {
     
     // mostrar el inodo raiz
     printf("DATOS DEL DIRECTORIO RAÍZ\n");
-    //printf("tipo: %c", )
-    //printf("permisos: ")
-    /*
-        "SEGUIR CON ESO"
-        atime: Tue 2021-03-09 18:16:08
-        mtime: Tue 2021-03-09 18:16:08
-        ctime: Tue 2021-03-09 18:16:08
-        btime: Tue 2021-03-09 18:16:08
-        nlinks: 1
-        tamEnBytesLog: 0
-        numBloquesOcupados: 0
-    */
+    printf("tipo: %c\n", inodoRaiz.tipo);
+    printf("permisos: %d\n", inodoRaiz.permisos);
+    
+    struct tm *ts;
+    char atime[80];
+    char mtime[80];
+    char ctime[80];
+    char btime[80];
 
+
+    struct inodo inodo;
+    int ninodo;
+
+    leer_inodo(ninodo, &inodo);
+    ts = localtime(&inodo.atime);
+    strftime(atime, sizeof(atime), "%a %Y-%m-%d %H:%M:%S", ts);
+    ts = localtime(&inodo.mtime);
+    strftime(mtime, sizeof(mtime), "%a %Y-%m-%d %H:%M:%S", ts);
+    ts = localtime(&inodo.ctime);
+    strftime(ctime, sizeof(ctime), "%a %Y-%m-%d %H:%M:%S", ts);
+    ts = localtime(&inodo.btime);
+    strftime(ctime, sizeof(btime), "%a %Y-%m-%d %H:%M:%S", ts);
+    printf("ID: %d ATIME: %s MTIME: %s CTIME: %s BTIME: %s\\n",ninodo,atime,mtime,ctime, btime);
+
+    printf("nlinks: %d\n", inodoRaiz.nlinks);
+    printf("tamEnBytesLog: %d\n", inodoRaiz.tamEnBytesLog);
+    printf("numBloquesOcupados: %d\n", inodoRaiz.numBloquesOcupados);
+ 
     if (bumount() == FALLO) return FALLO;
 
     return EXITO;
