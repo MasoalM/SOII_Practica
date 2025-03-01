@@ -58,12 +58,25 @@ int main(int argc, char **argv) {
     // reservar y liberar bloque
     printf("RESERVAMOS UN BLOQUE Y LUEGO LO LIBERAMOS\n");
     unsigned int bloqueReservado = reservar_bloque();
+    //volvemos a leer el SB dado que se ha actualizado
+    if(bread(posSB, &SB) == FALLO) {
+        perror(RED "Error al leer el superbloque");
+        return FALLO;
+    }
+    
     printf("Se ha reservado el bloque físico número %d que era el primero libre indicado por el MB\n", bloqueReservado);
     printf("SB.cantidadBloquesLibres = %d\n", SB.cantBloquesLibres);
     liberar_bloque(bloqueReservado);
+    
+    //volvemos a leer el SB dado que se ha actualizado
+    if(bread(posSB, &SB) == FALLO) {
+        perror(RED "Error al leer el superbloque");
+        return FALLO;
+    }
+    
     printf("Liberamos ese bloque y después SB.cantidadBloquesLibres = %d\n", SB.cantBloquesLibres);
 
-    printf("MAPA DE BITS CON BLOQUES DE METADATOS OCUPADOS\n");
+    printf("\nMAPA DE BITS CON BLOQUES DE METADATOS OCUPADOS\n");
     printf("leer_bit(posSB) -> %d\n", leer_bit(posSB));
     printf("leer_bit(SB.posPrimerBloqueMB) -> %d\n", leer_bit(SB.posPrimerBloqueMB));
     printf("leer_bit(SB.posUltimoBloqueMB) -> %d\n", leer_bit(SB.posUltimoBloqueMB));
@@ -73,7 +86,7 @@ int main(int argc, char **argv) {
     printf("leer_bit(SB.posUltimoBloqueDatos) -> %d\n", leer_bit(SB.posUltimoBloqueDatos));
     
     // mostrar el inodo raiz
-    printf("DATOS DEL DIRECTORIO RAÍZ\n");
+    printf("\nDATOS DEL DIRECTORIO RAÍZ\n");
     printf("tipo: %c\n", inodoRaiz.tipo);
     printf("permisos: %d\n", inodoRaiz.permisos);
     
@@ -85,7 +98,7 @@ int main(int argc, char **argv) {
 
 
     struct inodo inodo;
-    int ninodo;
+    int ninodo = 0;
 
     leer_inodo(ninodo, &inodo);
     ts = localtime(&inodo.atime);
@@ -95,8 +108,8 @@ int main(int argc, char **argv) {
     ts = localtime(&inodo.ctime);
     strftime(ctime, sizeof(ctime), "%a %Y-%m-%d %H:%M:%S", ts);
     ts = localtime(&inodo.btime);
-    strftime(ctime, sizeof(btime), "%a %Y-%m-%d %H:%M:%S", ts);
-    printf("ID: %d ATIME: %s MTIME: %s CTIME: %s BTIME: %s\\n",ninodo,atime,mtime,ctime, btime);
+    strftime(btime, sizeof(btime), "%a %Y-%m-%d %H:%M:%S", ts);
+    printf("ID: %d \nATIME: %s \nMTIME: %s \nCTIME: %s \nBTIME: %s \n",ninodo,atime,mtime,ctime, btime);
 
     printf("nlinks: %d\n", inodoRaiz.nlinks);
     printf("tamEnBytesLog: %d\n", inodoRaiz.tamEnBytesLog);

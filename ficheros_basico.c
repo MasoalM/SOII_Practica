@@ -207,7 +207,7 @@ int reservar_bloque(){
     if(SB.cantBloquesLibres == 0) return FALLO;
 
     //vamos a gestionar el buffer
-    unsigned int nbloqueMB = SB.posPrimerBloqueDatos;
+    unsigned int nbloqueMB = 0;
     unsigned char bufferMB[BLOCKSIZE];
     unsigned char bufferAux[BLOCKSIZE];
 
@@ -240,10 +240,10 @@ int reservar_bloque(){
 
     //calculamos en número de bloque real
     int nBloqueFisico = (nbloqueMB * BLOCKSIZE * 8) + (posbyte * 8) + posbit;
-
+    SB.cantBloquesLibres--;
     //guardamos los datos, y gestionsmos la información obtenida
     if(escribir_bit(nBloqueFisico, 1) == FALLO) return FALLO;
-    SB.cantBloquesLibres--;
+    
     if(bwrite(posSB, &SB) == FALLO) return FALLO;
     memset(bufferAux, 0, BLOCKSIZE);
     if(bwrite(nBloqueFisico, bufferAux) == FALLO) return FALLO;
@@ -318,27 +318,45 @@ int reservar_inodo(unsigned char tipo, unsigned char permisos) {
         perror(RED "Error al leer el superbloque");
         return FALLO;  // Usar un código de error adecuado
     }
+
+    //comprobamos si hay inodos libres
     if(SB.posPrimerInodoLibre == UINT_MAX) {
         perror(RED "no hay inodos disponibles");
         return FALLO;
     }
+
+    //guardamos la posición
     unsigned int posInodoReservado = SB.posPrimerInodoLibre;
+    //inicializaciones del inodo
     struct inodo inodoR;
     inodoR.permisos = permisos;
     inodoR.tipo = tipo;
-
     inodoR.nlinks = 1;
-
     inodoR.tamEnBytesLog = 0;
     inodoR.atime = time(NULL);
+    //printf("A TIME OG:  %t")
     inodoR.btime = time(NULL);
+    
     inodoR.ctime = time(NULL);
+    
     inodoR.mtime = time(NULL);
-    inodoR.numBloquesOcupados = 0;
-
-    memset(inodoR.punterosDirectos, 0, sizeof(inodoR.punterosDirectos));
+    //printf("M time: %d", inodoR.mtime);
+    inodoR.numBloquesOcupados = 0;;    memset(inodoR.punterosDirectos, 0, sizeof(inodoR.punterosDirectos));
     memset(inodoR.punterosIndirectos, 0, sizeof(inodoR.punterosIndirectos));
 
+    // Leer el inodo actual para obtener el enlace al siguiente inodo libre
+    struct inodo tempInodo;
+    if (leer_inodo(posInodoReservado, &tempInodo) == FALLO) {
+        perror("Error al leer el inodo para actualizar la lista enlazada");
+        return FALLO;
+    }
+    //inodoR.punterosDirectos[0]=tempInodo.punterosDirectos[0];
+
+    // Actualizar el primer inodo libre al siguiente en la lista
+    SB.posPrimerInodoLibre = tempInodo.punterosDirectos[0];  // Suponiendo que el primer puntero directo guarda el siguiente inodo libre
+
+
+    //Reservar el primer inodo libre
     escribir_inodo(posInodoReservado, &inodoR);
 
     SB.cantInodosLibres--;
