@@ -1,6 +1,12 @@
 #include "ficheros_basico.h"
 #include <limits.h>
 
+
+// Nombre: potencia
+// Utilidad: Funcion que dada una base y un exponente, te calcula el valor del número resultante de la operación
+// Parámetros de entrada: base y exponente (base)^exponente
+// Salida: devuelve el valor de la operación (base)^exponente
+// Dónde se utiliza: initMB
 int potencia(int base, int exponente) {
     int resultado = 1;
     for (int i = 0; i < exponente; i++) {
@@ -9,18 +15,36 @@ int potencia(int base, int exponente) {
     return resultado;
 }
 
+
+// Nombre: tamMB
+// Utilidad: Función que calcula el tamaño del mapa de bits
+// Parámetros de entrada: nbloque (número de bloque)
+// Salida: Devuelve el tamaño del mapa de bits
+// Dónde se utiliza: initSB e initMB
 int tamMB(unsigned int nbloques) {
     int resultado = (nbloques / 8) / BLOCKSIZE;
     if((nbloques / 8) % BLOCKSIZE > 0) return (resultado+1);
     return resultado;
 }
 
+
+// Nombre: tamAI
+// Utilidad: Función que calcula el tamaño del array de inodos
+// Parámetros de entrada: ninodos (número de inodos)
+// Salida: Devuelve el tamaño del array de inodos
+// Dónde se utiliza: Main de initSB e initMB
 int tamAI(unsigned int ninodos) {
     int resultado = (ninodos * INODOSIZE) / BLOCKSIZE;
     if((ninodos * INODOSIZE) % BLOCKSIZE) return (resultado+1);
     return resultado;
 }
 
+
+// Nombre: initSB
+// Utilidad: Función que inicializa el superbloque
+// Parámetros de entrada: nbloque (número de bloque), ninodos (número de inodos)
+// Salida: Devuelve -1 en caso de fallo, 0 en caso de éxito
+// Dónde se utiliza: Main de mi_mkfs
 int initSB(unsigned int nbloques, unsigned int ninodos) {
     struct superbloque SB;  // Superbloque
     unsigned int bufferSB [BLOCKSIZE];       
@@ -48,6 +72,11 @@ int initSB(unsigned int nbloques, unsigned int ninodos) {
 }
 
 
+// Nombre: initMB
+// Utilidad: Función que inicializa el mapa de bits
+// Parámetros de entrada: NONE
+// Salida: -1 en caso de fallo, 0 en caso de éxito
+// Dónde se utiliza: Main de mi_mkfs
 int initMB() { 
     struct superbloque SB;  // Superbloque
     unsigned char bufferMB[BLOCKSIZE];
@@ -104,6 +133,12 @@ int initMB() {
     return EXITO;
 }
 
+
+// Nombre: initAI
+// Utilidad: Función que inicializa el array de inodos
+// Parámetros de entrada: NONE
+// Salida: -1 en caso de fallo, 0 en caso de éxito
+// Dónde se utiliza: Main de mi_mkfs
 int initAI() {
     struct superbloque SB;  // Superbloque
     if (bread(posSB, &SB) == FALLO) return FALLO; //gestión de errores
@@ -135,68 +170,80 @@ int initAI() {
     return EXITO;
 }
 
+
+//
 //INICIO NIVEL 3
+//
+
+
+// Nombre: ecribir_bit
+// Utilidad: Función que escribe el valor del bit (0 o 1) en la posición que representa el nbloque en el MB
+// Parámetros de entrada: nbloque (número de bloque), bit (valor a escribir (0 o 1))
+// Salida: -1 en caso de fallo, 0 en caso de éxito
+// Dónde se utiliza: Reservar bloque, liberar bloque
 int escribir_bit(unsigned int nbloque, unsigned int bit){
 
-    struct superbloque SB;
+    //declaraciones
+    struct superbloque SB; //superbloque
     if(bread(posSB, &SB) == FALLO) return FALLO;
-
     unsigned int posByte = nbloque/8;
-
     unsigned int posBit = nbloque%8;
-
     unsigned int nbloqueMB = posByte / BLOCKSIZE;
-
     unsigned int nbloqueabs = SB.posPrimerBloqueMB + nbloqueMB;
-
     unsigned char bufferMB[BLOCKSIZE];
 
+    //tratamiento
     posByte = posByte % BLOCKSIZE;
-
     if(bread(SB.posPrimerBloqueMB,bufferMB) == FALLO) return FALLO;
-
     unsigned char mascara = 128; // 10000000
-
     mascara >>= posBit; // desplazamiento de bits a la derecha
-
     if(bit == 1){
         bufferMB[posByte] |= mascara; //poner a 1 el bit indicado 
     } else {
         bufferMB[posByte] &= ~mascara; //poner a 0 el bit indicado
     }
 
+    //resultado
     if(bwrite(nbloqueabs, bufferMB) == FALLO) return FALLO;
-
     return EXITO;
 }
 
+
+// Nombre: leer_bit
+// Utilidad: Función que lee el valor del bit en la posición del MB que es representado por el nbloque (número de bloque)
+// Parámetros de entrada: nbloque (número de bloque)
+// Salida: mascara (unsigned char) con el valor del bit a leer del MB
+// Dónde se utiliza: leer_sf
 char leer_bit(unsigned int nbloque){
 
+    //declaraciones
     struct superbloque SB;
     if(bread(posSB, &SB) == FALLO) return FALLO;
-
     unsigned int posByte = nbloque / 8;
-
     unsigned int posBit = nbloque % 8;
-
     unsigned int nbloqueMB = posByte / BLOCKSIZE;
-
     unsigned int nbloqueabs = SB.posPrimerBloqueMB + nbloqueMB;
-
     unsigned char bufferMB[BLOCKSIZE];
 
+    //tratamiento
     if(bread(nbloqueabs, bufferMB) == FALLO) return FALLO;
-
     posByte = posByte % BLOCKSIZE;
-
     unsigned char mascara = 128; // 10000000
     mascara >>= posBit;          // desplazamiento de bits a la derecha, los que indique posbit
     mascara &= bufferMB[posByte]; // operador AND para bits
     mascara >>= (7 - posBit);     // desplazamiento de bits a la derecha 
                                   // para dejar el 0 o 1 en el extremo derecho y leerlo en decimal
+
+    //devolución de resultado
     return mascara;
 }
 
+
+// Nombre: reservar bloque
+// Utilidad: Función que busca el primer bit del MB a 0, lo pone a 1, y devuelve su posición
+// Parámetros de entrada: NONE
+// Salida: -1 en caso de fallo, nBloqueFisico (posición del primer bloque libre)
+// Dónde se utiliza: Reservar bloque, liberar bloque
 int reservar_bloque(){
 
     //paso 1
