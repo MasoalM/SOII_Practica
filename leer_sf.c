@@ -38,8 +38,8 @@ int main(int argc, char **argv) {
     printf("totBloques = %d\n", SB.totBloques);
     printf("totInodos = %d\n\n", SB.totInodos);
     
-    printf("sizeof struct superbloque: %lu\n", sizeof(struct superbloque));
-    printf("sizeof struct inodo: %lu\n\n", sizeof(struct inodo));
+    //printf("sizeof struct superbloque: %lu\n", sizeof(struct superbloque));
+    //printf("sizeof struct inodo: %lu\n\n", sizeof(struct inodo));
 
     /*
     printf("RECORRIDO LISTA ENLAZADA DE INODOS LIBRES\n");
@@ -55,6 +55,44 @@ int main(int argc, char **argv) {
     printf("\n");
     */
 
+    printf("INODO 1. TRADUCCION DE LOS BLOQUES LOGICOS 8, 204, 30.004, 400.004 y 468.750\n");
+    reservar_inodo('f', '6'); // 6?
+
+    //traducir_bloque_inodo(1, ); ??
+
+    // mostrar el inodo reservado 1
+    printf("\nDATOS DEL INODO RESERVADO 1\n");
+    printf("tipo: %c\n", inodoRaiz.tipo);
+    printf("permisos: %d\n", inodoRaiz.permisos);
+    
+    struct tm *ts;
+    char atime[80];
+    char mtime[80];
+    char ctime[80];
+    char btime[80];
+
+
+    struct inodo inodo;
+    int ninodo = 1;
+
+    leer_inodo(ninodo, &inodo);
+    ts = localtime(&inodo.atime);
+    strftime(atime, sizeof(atime), "%a %Y-%m-%d %H:%M:%S", ts);
+    ts = localtime(&inodo.mtime);
+    strftime(mtime, sizeof(mtime), "%a %Y-%m-%d %H:%M:%S", ts);
+    ts = localtime(&inodo.ctime);
+    strftime(ctime, sizeof(ctime), "%a %Y-%m-%d %H:%M:%S", ts);
+    ts = localtime(&inodo.btime);
+    strftime(btime, sizeof(btime), "%a %Y-%m-%d %H:%M:%S", ts);
+    printf("ID: %d \nATIME: %s \nMTIME: %s \nCTIME: %s \nBTIME: %s \n",ninodo,atime,mtime,ctime, btime);
+
+    printf("nlinks: %d\n", inodoRaiz.nlinks);
+    printf("tamEnBytesLog: %d\n", inodoRaiz.tamEnBytesLog);
+    printf("numBloquesOcupados: %d\n", inodoRaiz.numBloquesOcupados);
+
+    
+
+    /*
     // reservar y liberar bloque
     printf("RESERVAMOS UN BLOQUE Y LUEGO LO LIBERAMOS\n");
     unsigned int bloqueReservado = reservar_bloque();
@@ -114,6 +152,8 @@ int main(int argc, char **argv) {
     printf("nlinks: %d\n", inodoRaiz.nlinks);
     printf("tamEnBytesLog: %d\n", inodoRaiz.tamEnBytesLog);
     printf("numBloquesOcupados: %d\n", inodoRaiz.numBloquesOcupados);
+
+    */
  
     if (bumount() == FALLO) return FALLO;
 

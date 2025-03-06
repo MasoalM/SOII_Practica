@@ -322,10 +322,13 @@ int escribir_inodo(unsigned int ninodo, struct inodo *inodo){
     struct inodo inodos[BLOCKSIZE / INODOSIZE];
     unsigned int nbloqueAI = (ninodo * INODOSIZE) / BLOCKSIZE;
     unsigned int nbloqueabs = nbloqueAI + SB.posPrimerBloqueAI;
-    bread(nbloqueabs, inodos);
+    if (bread(nbloqueabs, inodos) == FALLO) return FALLO;
     unsigned int posinodo = ninodo % (BLOCKSIZE / INODOSIZE);
     inodos[posinodo] = *inodo;
-    bwrite(nbloqueabs, inodos);
+    if (bwrite(nbloqueabs, inodos) == FALLO) {
+        perror(RED "Error al escribir el inodo");
+        return FALLO;
+    }
     
     return EXITO;
 }
@@ -404,8 +407,10 @@ int reservar_inodo(unsigned char tipo, unsigned char permisos) {
 
 
     //Reservar el primer inodo libre
-    escribir_inodo(posInodoReservado, &inodoR);
-
+    if(escribir_inodo(posInodoReservado, &inodoR)) {
+        perror(RED "Error al escribir el inodo");
+        return FALLO;
+    }    
     SB.cantInodosLibres--;
 
     if (bwrite(posSB, &SB) == FALLO) {
@@ -414,5 +419,147 @@ int reservar_inodo(unsigned char tipo, unsigned char permisos) {
     }
 
     return posInodoReservado;
+}
+
+
+//
+// NIVEL 4
+//
+
+
+// Nombre: obtener_nRangoBL
+// Utilidad: Función que busca el rango en el cual se encuentra el bloque lógico
+// Parámetros de entrada: inodo (inodo el cual apunta al bloque a hallar), nblogico (posición lógica del bloque),
+//                        *ptr (puntero que apuntará a la posición que apunta el inodo en el rango deseado)
+// Salida: 0, en el rango más bajo; 1, si nblogico<268; 2, si nblogico<65.804; 3, si nblogico<16.843.020
+// Dónde se utiliza: ///
+int obtener_nRangoBL(struct inodo *inodo, unsigned int nblogico, unsigned int *ptr) {
+    //tratamiento
+    if(nblogico < DIRECTOS) { // < 12
+        *ptr = inodo->punterosDirectos[nblogico];
+        return 0;
+    } else if(nblogico < INDIRECTOS0) { // < 268    
+        *ptr = inodo->punterosIndirectos[0];
+        return 1;
+    } else if(nblogico < INDIRECTOS1) { // < 65.804
+        *ptr = inodo->punterosIndirectos[1];
+        return 2;
+    } else if(nblogico < INDIRECTOS2) { // < 16.843.020
+        *ptr = inodo->punterosIndirectos[2];
+        return 3;
+    } else {
+        *ptr = 0;            
+        perror(RED "Bloque lógico fuera de rango");       
+        return FALLO;   
+    }
+}
+
+
+// Nombre: obtener_indice
+// Utilidad: Función que obtiene el índice del bloque de los punteros
+// Parámetros de entrada: nblogico (posición lógica del bloque), nivel_punteros (nivel de los punteros en 
+//                        el cual se encuentra)
+// Salida: nblogico, si nblogico<directos;
+//         nblogico-DIRECTOS, si nblogico<Indirectos0;
+//         (nblogico-Indirectos0)/NPUNTEROS, si (nblogico<indirectos1)&&nivel_punteros==2;
+//         (nblogico-indirectos0)%npunteross, si (nblogico<indirectos1)&&nivel_punteros==1;
+//         (nblogico-indirectos1)/(npunteros*npunteros), si (nblogico<indirectos2)&&(nivel_punteros==3);
+//         ((nblogico-indirectos1)%(npunteros*npunteros))/npunteros, si (nblogico<indirectos2)&&(nivel_punteros==2);
+//         ((nblogico-indirectos1)%(npunteros*npunteros))%npunteros, si (nblogico<indirectos2)&&(nivel_punteros==1);
+//         -1 en caso de fallo.
+// Dónde se utiliza: ///
+int obtener_indice(unsigned int nblogico, int nivel_punteros) {
+    if (nblogico < DIRECTOS) return nblogico;
+    else if (nblogico < INDIRECTOS0) return nblogico - DIRECTOS;
+    else if (nblogico < INDIRECTOS1) {
+        if (nivel_punteros == 2) return (nblogico - INDIRECTOS0) / NPUNTEROS;
+        else if (nivel_punteros == 1) return (nblogico - INDIRECTOS0) % NPUNTEROS;
+    } else if (nblogico < INDIRECTOS2) {
+        if (nivel_punteros == 3) return (nblogico - INDIRECTOS1) / (NPUNTEROS * NPUNTEROS);
+        else if (nivel_punteros == 2) return ((nblogico - INDIRECTOS1) % (NPUNTEROS * NPUNTEROS)) / NPUNTEROS;
+        else if (nivel_punteros == 1) return ((nblogico - INDIRECTOS1) % (NPUNTEROS * NPUNTEROS)) % NPUNTEROS;
+    }
+    return FALLO; // En caso de un valor fuera de rango
+}
+
+
+// Nombre: traducir_bloque_inodo
+// Utilidad: Función que obtiene el número de bloque físico a través del bloque lógico
+// Parámetros de entrada: ninodo (número del inodo), nblogico (posición lógica del bloque),
+//                        reservar
+// Salida: 0, en el rango más bajo; 1, si nblogico<268; 2, si nblogico<65.804; 3, si nblogico<16.843.020
+// Dónde se utiliza: ///
+int traducir_bloque_inodo(unsigned int ninodo, unsigned int nblogico, unsigned char reservar) {
+    unsigned int ptr = 0, ptr_ant = 0, salvar_inodo = 0, indice = 0;
+    int nRangoBL, nivel_punteros;
+    unsigned int buffer[NPUNTEROS];
+    struct inodo inodo;
+
+    // Leer inodo
+    leer_inodo(ninodo, &inodo);
+    
+    // Obtener el rango del bloque lógico
+    nRangoBL = obtener_nRangoBL(&inodo, nblogico, &ptr);
+    nivel_punteros = nRangoBL; // Nivel más alto de punteros indirectos
+
+    while (nivel_punteros > 0) {  // Iterar sobre los niveles de punteros indirectos
+        if (ptr == 0) { // No hay bloques de punteros asignados
+            if (reservar == 0) return -1; // Bloque inexistente
+
+            // Reservar bloque de punteros y crear enlaces desde el inodo hasta los bloques de datos
+            ptr = reservar_bloque();
+            inodo.numBloquesOcupados++;
+            inodo.ctime = time(NULL);
+            salvar_inodo = 1;
+
+            if (nivel_punteros == nRangoBL) {  // Bloque cuelga directamente del inodo
+                inodo.punterosIndirectos[nRangoBL - 1] = ptr;
+            } else {  // Bloque cuelga de otro bloque de punteros
+                buffer[indice] = ptr;
+                if (bwrite(ptr_ant, buffer) == FALLO) { // Guardar en el dispositivo
+                    perror(RED "Error al guardar en el dispositivo");
+                    return FALLO;
+                }
+            }
+            memset(buffer, 0, BLOCKSIZE); // Inicializar el buffer a 0
+        } else {
+            if (bread(ptr, buffer) == FALLO) return FALLO; // Leer el bloque de punteros existente
+        }
+
+        indice = obtener_indice(nblogico, nivel_punteros);
+        ptr_ant = ptr; // Guardar puntero actual
+        ptr = buffer[indice]; // Desplazarse al siguiente nivel
+        nivel_punteros--;
+    }
+
+    // Al salir del bucle estamos en el nivel de datos
+    if (ptr == 0) {  // No existe bloque de datos
+        if (reservar == 0) return -1; // Error de lectura, bloque inexistente
+
+        ptr = reservar_bloque();
+        inodo.numBloquesOcupados++;
+        inodo.ctime = time(NULL);
+        salvar_inodo = 1;
+
+        if (nRangoBL == 0) {  // Puntero directo
+            inodo.punterosDirectos[nblogico] = ptr;
+        } else {
+            buffer[indice] = ptr;
+            if (bwrite(ptr_ant, buffer) == FALLO) { // Guardar en el dispositivo
+                perror(RED "Error al guardar en el dispositivo");
+                return FALLO;
+            }
+        }
+    }
+
+    // Guardar el inodo si hubo cambios
+    if (salvar_inodo) {
+        if(escribir_inodo(ninodo, &inodo)==FALLO) {
+            perror(RED "Error al escribir el inodo");
+            return FALLO;
+        }
+    }
+
+    return ptr;  // Retorna el número de bloque físico correspondiente al bloque lógico
 }
 
