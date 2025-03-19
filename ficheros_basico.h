@@ -65,7 +65,7 @@ struct inodo {     // comprobar que ocupa 128 bytes haciendo un sizeof(inodo)!!!
    char padding[INODOSIZE - 2 * sizeof(unsigned char) - 4 * sizeof(time_t) - 18 * sizeof(unsigned int) - 6 * sizeof(unsigned char)];
    // Fijarse que también se resta lo que ocupen las variables de alineación utilizadas!!!
 };
-/*
+
 //nivel2
 int tamMB(unsigned int nbloques);
 int tamAI(unsigned int ninodos);
@@ -86,4 +86,3 @@ int reservar_inodo(unsigned char tipo, unsigned char permisos);
 int obtener_nRangoBL(struct inodo *inodo, unsigned int nblogico, unsigned int *ptr);
 int obtener_indice(unsigned int nblogico, int nivel_punteros);
 int traducir_bloque_inodo(unsigned int inodo, unsigned int nblogico, unsigned char reservar);
-*/

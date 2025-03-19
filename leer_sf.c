@@ -56,41 +56,44 @@ int main(int argc, char **argv) {
     */
 
     printf("INODO 1. TRADUCCION DE LOS BLOQUES LOGICOS 8, 204, 30.004, 400.004 y 468.750\n");
-    reservar_inodo('f', '6'); // 6?
+    unsigned int posInodoReservado = reservar_inodo('f', 6);
 
-    //traducir_bloque_inodo(1, ); ??
+    struct inodo in;
+
+    traducir_bloque_inodo(posInodoReservado, 8, 1);
+    traducir_bloque_inodo(posInodoReservado, 204, 1);
+    traducir_bloque_inodo(posInodoReservado, 30004, 1);
+    traducir_bloque_inodo(posInodoReservado, 400004, 1);
+    traducir_bloque_inodo(posInodoReservado, 468750, 1);
+
+    leer_inodo(posInodoReservado, &in);
 
     // mostrar el inodo reservado 1
     printf("\nDATOS DEL INODO RESERVADO 1\n");
-    printf("tipo: %c\n", inodoRaiz.tipo);
-    printf("permisos: %d\n", inodoRaiz.permisos);
+    printf("tipo: %c\n", in.tipo);
+    printf("permisos: %d\n", in.permisos);
     
     struct tm *ts;
     char atime[80];
     char mtime[80];
     char ctime[80];
     char btime[80];
-
-
-    struct inodo inodo;
-    int ninodo = 1;
-
-    leer_inodo(ninodo, &inodo);
-    ts = localtime(&inodo.atime);
-    strftime(atime, sizeof(atime), "%a %Y-%m-%d %H:%M:%S", ts);
-    ts = localtime(&inodo.mtime);
-    strftime(mtime, sizeof(mtime), "%a %Y-%m-%d %H:%M:%S", ts);
-    ts = localtime(&inodo.ctime);
-    strftime(ctime, sizeof(ctime), "%a %Y-%m-%d %H:%M:%S", ts);
-    ts = localtime(&inodo.btime);
-    strftime(btime, sizeof(btime), "%a %Y-%m-%d %H:%M:%S", ts);
-    printf("ID: %d \nATIME: %s \nMTIME: %s \nCTIME: %s \nBTIME: %s \n",ninodo,atime,mtime,ctime, btime);
-
-    printf("nlinks: %d\n", inodoRaiz.nlinks);
-    printf("tamEnBytesLog: %d\n", inodoRaiz.tamEnBytesLog);
-    printf("numBloquesOcupados: %d\n", inodoRaiz.numBloquesOcupados);
-
     
+    ts = localtime(&in.atime);
+    strftime(atime, sizeof(atime), "%a %Y-%m-%d %H:%M:%S", ts);
+    ts = localtime(&in.mtime);
+    strftime(mtime, sizeof(mtime), "%a %Y-%m-%d %H:%M:%S", ts);
+    ts = localtime(&in.ctime);
+    strftime(ctime, sizeof(ctime), "%a %Y-%m-%d %H:%M:%S", ts);
+    ts = localtime(&in.btime);
+    strftime(btime, sizeof(btime), "%a %Y-%m-%d %H:%M:%S", ts);
+    printf("ATIME: %s \nMTIME: %s \nCTIME: %s \nBTIME: %s \n",atime,mtime,ctime, btime);
+
+    printf("nlinks: %d\n", in.nlinks);
+    printf("tamEnBytesLog: %d\n", in.tamEnBytesLog);
+    printf("numBloquesOcupados: %d\n", in.numBloquesOcupados);
+
+     printf("SB.posPrimerInodoLibre = %d\n", SB.posPrimerInodoLibre);
 
     /*
     // reservar y liberar bloque
