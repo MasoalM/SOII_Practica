@@ -46,11 +46,6 @@ struct inodo {     // comprobar que ocupa 128 bytes haciendo un sizeof(inodo)!!!
    time_t ctime; // Fecha y hora de la última modificación del inodo
    time_t btime; // Fecha y hora de creación del inodo (birth)
 
-
-   /* comprobar que el tamaño del tipo time_t para vuestra plataforma/compilador es 8:
-   printf ("sizeof time_t is: %ld\n", sizeof(time_t)); */
-
-
    unsigned int nlinks;             // Cantidad de enlaces de entradas en directorio
    unsigned int tamEnBytesLog;      // Tamaño en bytes lógicos (EOF)
    unsigned int numBloquesOcupados; // Cantidad de bloques ocupados zona de datos
@@ -86,3 +81,4 @@ int reservar_inodo(unsigned char tipo, unsigned char permisos);
 int obtener_nRangoBL(struct inodo *inodo, unsigned int nblogico, unsigned int *ptr);
 int obtener_indice(unsigned int nblogico, int nivel_punteros);
 int traducir_bloque_inodo(unsigned int inodo, unsigned int nblogico, unsigned char reservar);
+

@@ -565,4 +565,3 @@ int traducir_bloque_inodo(unsigned int ninodo, unsigned int nblogico, unsigned c
     printf("\n");
     return ptr;  // Retorna el número de bloque físico correspondiente al bloque lógico
 }
-
