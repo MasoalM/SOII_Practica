@@ -60,11 +60,11 @@ int main(int argc, char **argv) {
 
     struct inodo in;
 
-    //traducir_bloque_inodo(posInodoReservado, 8, 1);
-    //traducir_bloque_inodo(posInodoReservado, 204, 1);
-    //traducir_bloque_inodo(posInodoReservado, 30004, 1);
-    //traducir_bloque_inodo(posInodoReservado, 400004, 1);
-    //traducir_bloque_inodo(posInodoReservado, 468750, 1);
+    traducir_bloque_inodo(posInodoReservado, 8, 1);
+    traducir_bloque_inodo(posInodoReservado, 204, 1);
+    traducir_bloque_inodo(posInodoReservado, 30004, 1);
+    traducir_bloque_inodo(posInodoReservado, 400004, 1);
+    traducir_bloque_inodo(posInodoReservado, 468750, 1);
 
     leer_inodo(posInodoReservado, &in);
 
@@ -93,7 +93,7 @@ int main(int argc, char **argv) {
     printf("tamEnBytesLog: %d\n", in.tamEnBytesLog);
     printf("numBloquesOcupados: %d\n", in.numBloquesOcupados);
 
-     printf("SB.posPrimerInodoLibre = %d\n", SB.posPrimerInodoLibre);
+    printf("SB.posPrimerInodoLibre = %d\n", SB.posPrimerInodoLibre);
 
     /*
     // reservar y liberar bloque

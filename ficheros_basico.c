@@ -497,7 +497,7 @@ int traducir_bloque_inodo(unsigned int ninodo, unsigned int nblogico, unsigned c
     nivel_punteros = nRangoBL; // Nivel más alto de punteros indirectos
     while (nivel_punteros > 0) {  // Iterar sobre los niveles de punteros indirectos
         if (ptr == 0) { // No hay bloques de punteros asignados
-            if (reservar == 0) return -1; // Bloque inexistente
+            if (reservar == 0) return FALLO; // Bloque inexistente
 
             // Reservar bloque de punteros y crear enlaces desde el inodo hasta los bloques de datos
             ptr = reservar_bloque();
@@ -534,7 +534,7 @@ int traducir_bloque_inodo(unsigned int ninodo, unsigned int nblogico, unsigned c
 
     // Al salir del bucle estamos en el nivel de datos
     if (ptr == 0) {  // No existe bloque de datos
-        if (reservar == 0) return -1; // Error de lectura, bloque inexistente
+        if (reservar == 0) return FALLO; // Error de lectura, bloque inexistente
 
         ptr = reservar_bloque();
         inodo.numBloquesOcupados++;
