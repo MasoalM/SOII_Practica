@@ -6,13 +6,16 @@ int mi_write_f(unsigned int ninodo, const void *buf_original, unsigned int offse
 
     //paso 1, iniciar inodo y comprobar permisos
     struct inodo inodo;
-    leer_inodo(ninodo, &inodo);
+    if(leer_inodo(ninodo, &inodo) == FALLO){
+        perror(RED "ERROR");
+        return FALLO;
+    }
 
     if ((inodo.permisos & 2) != 2){
         fprintf(stderr, RED "No hay permisos de escritura\n" RESET);
         return FALLO;
     }
-
+    
     //paso 2, calcular distancias
     unsigned int primerBL = offset/BLOCKSIZE;
     unsigned int ultimoBL = (offset + nbytes - 1) / BLOCKSIZE;
@@ -37,7 +40,11 @@ int mi_write_f(unsigned int ninodo, const void *buf_original, unsigned int offse
             return FALLO;        
         } 
         memcpy(bufferBloque + desp1, buf_original, nbytes);
-        bwrite(BF, bufferBloque);
+        if(bwrite(BF, bufferBloque) == FALLO){
+            perror(RED "ERROR");
+            return FALLO;
+        }
+
     }else{
 
         //primer bloque lógico
@@ -55,11 +62,17 @@ int mi_write_f(unsigned int ninodo, const void *buf_original, unsigned int offse
         } 
 
         memcpy(bufferBloque + desp1, buf_original, (BLOCKSIZE - desp1));
-        bwrite(BF, bufferBloque);
+        if(bwrite(BF, bufferBloque) == FALLO){
+            perror(RED "ERROR");
+            return FALLO;
+        }
 
         //Bloques intermedios
         for(int bl=BF+1; (bl - BF) < (primerBL - ultimoBL); bl++){
-            bwrite(BF + ( bl - BF ) + 1, buf_original + (BLOCKSIZE - desp1) + (bl - primerBL - 1)*BLOCKSIZE);
+            if(bwrite(BF + ( bl - BF ) + 1, buf_original + (BLOCKSIZE - desp1) + (bl - primerBL - 1)*BLOCKSIZE) == FALLO){
+                perror(RED "ERROR");
+                return FALLO;
+            }
         }
 
         //bloque final
@@ -80,15 +93,18 @@ int mi_write_f(unsigned int ninodo, const void *buf_original, unsigned int offse
     }
 
     //actualizar metainformación
-    struct inodo inodo;
-    leer_inodo(ninodo, &inodo);
-    if(ky=1){
-        if(){
-
+    if(ky==1){
+        if(inodo.tamEnBytesLog<(offset + nbytes -1)){
+            inodo.tamEnBytesLog=(offset + nbytes -1);
         }
-        inodo.tamEnBytesLog
     }
-
+    inodo.mtime=time(NULL);
+    inodo.ctime=time(NULL);
+    if(escribir_inodo(ninodo, &inodo)==FALLO){
+        perror(RED "ERROR");
+        return FALLO;
+    }
+    return 1;
 }
 
 int mi_read_f(unsigned int ninodo, void *buf_original, unsigned int offset, unsigned int nbytes) {
@@ -121,7 +137,7 @@ int mi_read_f(unsigned int ninodo, void *buf_original, unsigned int offset, unsi
     unsigned int desp2 = (offset + nbytes - 1) % BLOCKSIZE;
 
     char buf_bloque[BLOCKSIZE];
-    int bytesLeidos = 0;
+    //int bytesLeidos = 0;
     int totalLeidos = 0;
 
     for (unsigned int bl = primerBL; bl <= ultimoBL; bl++) {
