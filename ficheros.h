@@ -27,3 +27,5 @@ struct STAT {
  int mi_read_f(unsigned int ninodo, void *buf_original, unsigned int offset, unsigned int nbytes);
  int mi_stat_f(unsigned int ninodo, struct STAT *p_stat);
  int mi_chmod_f(unsigned int ninodo, unsigned char permisos);
+
+ int leamosInodo(int ninodo, int offset, int bytesEscritos);

@@ -7,7 +7,6 @@ int main(int argc, char **argv) {
         return FALLO;
     }
 
-    int *nombre_dispositivo = argv[1];
     int ninodo = atoi(argv[2]);
     unsigned char permisos = (unsigned char) atoi(argv[3]);
 
