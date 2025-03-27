@@ -62,7 +62,7 @@ int mi_read_f(unsigned int ninodo, void *buf_original, unsigned int offset, unsi
         perror("Error al leer inodo");
         return FALLO;
     }
-
+    
     // Comprobar permisos de lectura
     if ((inodo.permisos & 4) != 4) {
         fprintf(stderr, "No hay permisos de lectura\n");

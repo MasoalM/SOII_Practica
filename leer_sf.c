@@ -54,7 +54,7 @@ int main(int argc, char **argv) {
     }
     printf("\n");
     */
-
+    /*
     printf("INODO 1. TRADUCCION DE LOS BLOQUES LOGICOS 8, 204, 30.004, 400.004 y 468.750\n");
     unsigned int posInodoReservado = reservar_inodo('f', 6);
 
@@ -94,7 +94,7 @@ int main(int argc, char **argv) {
     printf("numBloquesOcupados: %d\n", in.numBloquesOcupados);
 
     printf("SB.posPrimerInodoLibre = %d\n", SB.posPrimerInodoLibre);
-
+    */
     /*
     // reservar y liberar bloque
     printf("RESERVAMOS UN BLOQUE Y LUEGO LO LIBERAMOS\n");

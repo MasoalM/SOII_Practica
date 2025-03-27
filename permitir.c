@@ -13,8 +13,8 @@ int main(int argc, char **argv) {
     // Montar dispositivo virtual
     if(bmount(argv[1])==FALLO) return FALLO;
 
-   int resultado = mi_chmod_f(ninodo,permisos);
-   if (resultado == -1) {
+    int resultado = mi_chmod_f(ninodo,permisos);
+    if (resultado == -1) {
         fprintf(stderr, "Error al cambiar los permisos del inodo %d\n", ninodo);
         bumount();
         exit(EXIT_FAILURE);

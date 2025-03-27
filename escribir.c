@@ -9,7 +9,7 @@ int main(int argc, char **argv) {
         return FALLO;
     }
 
-    printf("longitud texto: %ld\n\n", strlen(argv[2]));
+    //printf("longitud texto: %ld\n\n", strlen(argv[2]));
     char *texto = argv[2];
     int cantidadInodos = atoi(argv[3]);
     //int offset = atoi(argv[4]);
@@ -22,7 +22,6 @@ int main(int argc, char **argv) {
     unsigned int escritos = mi_write_f(posIn, texto, 9000, strlen(texto));
     if(escritos==FALLO) return FALLO;
     if(cantidadInodos==0){
-        
         leamosInodo(posIn, 9000, escritos);
         escritos=mi_write_f(posIn, texto, 209000, strlen(texto));
         if(escritos==FALLO) return FALLO;
@@ -62,10 +61,6 @@ int main(int argc, char **argv) {
         return FALLO;
     }
     
-    printf("tamEnBytesLog: %d\n", inodo.tamEnBytesLog);
-    printf("bloques ocupados: %d\n", inodo.numBloquesOcupados);
-    
-    
     // Desmontar dispositivo virtual
     if(bumount() == FALLO) return FALLO;
 
@@ -87,8 +82,8 @@ int leamosInodo(int ninodo, int offset, int bytesEscritos){
 
     struct STAT stat;
     if(mi_stat_f(ninodo, &stat)==FALLO) return FALLO;
-    printf("stat.tamEnBytesLog=%d\n", stat.tamEnBytesLog);
-    printf("stat.numBloquesOcupados=%d\n\n", stat.numBloquesOcupados);
+    //printf("stat.tamEnBytesLog=%d\n", stat.tamEnBytesLog);
+    //printf("stat.numBloquesOcupados=%d\n\n", stat.numBloquesOcupados);
 
     printf("tamEnBytesLog: %d\n", inodo.tamEnBytesLog);
     printf("bloques ocupados: %d\n\n\n\n\n\n", inodo.numBloquesOcupados);
