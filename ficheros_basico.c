@@ -511,7 +511,8 @@ int traducir_bloque_inodo(unsigned int ninodo, unsigned int nblogico, unsigned c
                 printf("[traducir_bloque_inodo()→ inodo.punterosIndirectos[%d] = %d (reservado BF %d para punteros_nivel%d)]\n", nRangoBL-1, ptr, ptr, nRangoBL);
             } else {
                 buffer[indice] = ptr;
-                printf("[traducir_bloque_inodo()→ punteros_nivel%d[%d] = %d (reservado BF %d para punteros_nivel%d)]\n", nivel_punteros, obtener_indice(nblogico, nivel_punteros), ptr, ptr, nivel_punteros);
+                //printf("[traducir_bloque_inodo()→ punteros_nivel%d[%d] = %d (reservado BF %d para punteros_nivel%d)]\n", nivel_punteros, obtener_indice(nblogico, nivel_punteros), ptr, ptr, nivel_punteros);
+                printf("[traducir_bloque_inodo()→ punteros_nivel%d[%d] = %d (reservado BF %d para punteros_nivel%d)]\n", (nivel_punteros+1), obtener_indice(nblogico, (nivel_punteros+1)), ptr, ptr, (nivel_punteros+1));
                 if (bwrite(ptr_ant, buffer) == FALLO) { // Guardar en el dispositivo
                     perror("Error al guardar en el dispositivo");
                     return FALLO;
@@ -541,7 +542,8 @@ int traducir_bloque_inodo(unsigned int ninodo, unsigned int nblogico, unsigned c
             printf("[traducir_bloque_inodo()→ inodo.punterosDirectos[%d] = %d (reservado BF %d para BL %d)]\n", nblogico, ptr, ptr, nblogico);
         } else {
             buffer[indice] = ptr;
-            printf("[traducir_bloque_inodo()→ punteros_nivel1[%d] = %d (reservado BF %d para BL %d)]\n", obtener_indice(nblogico, 1), ptr, ptr, nblogico);
+            //printf("[traducir_bloque_inodo()→ punteros_nivel1[%d] = %d (reservado BF %d para BL %d)]\n", obtener_indice(nblogico, 1), ptr, ptr, nblogico);
+            printf("[traducir_bloque_inodo()→ punteros_nivel%d[%d] = %d (reservado BF %d para punteros_nivel%d)]\n", (nivel_punteros+1), obtener_indice(nblogico, (nivel_punteros+1)), ptr, ptr, (nivel_punteros+1));
             if (bwrite(ptr_ant, buffer) == FALLO) { // Guardar en el dispositivo
                 perror("Error al guardar en el dispositivo");
                 return FALLO;
@@ -565,22 +567,162 @@ int traducir_bloque_inodo(unsigned int ninodo, unsigned int nblogico, unsigned c
 // NIVEL 6
 //
 
-int liberar_inodo(unsigned int ninodo) {
-    struct inodo in;
-    if(leer_inodo(ninodo, &in) == FALLO) return FALLO;
-    liberar_bloques_inodo(0, &in);
-
-    unsigned int ultimoBloqueInodo = in.tamEnBytesLog;
-
-    return EXITO;
-}
-
 int liberar_bloques_inodo(unsigned int primerBL, struct inodo *inodo) {
-    return EXITO;
+    unsigned int nivel_punteros = 0, nBL = primerBL, ultimoBL, ptr = 0;
+    int nRangoBL = 0, liberados = 0, eof = 0;
+    
+    if (inodo->tamEnBytesLog == 0) 
+        return 0; // El archivo está vacío
+
+    // Obtener el último bloque lógico
+    if (inodo->tamEnBytesLog % BLOCKSIZE == 0) 
+        ultimoBL = inodo->tamEnBytesLog / BLOCKSIZE - 1;
+    else  
+        ultimoBL = inodo->tamEnBytesLog / BLOCKSIZE;
+
+    nRangoBL = obtener_nRangoBL(inodo, nBL, &ptr);
+
+    // Liberar los bloques directos
+    if (nRangoBL == 0) {
+        liberados += liberar_directos(&nBL, ultimoBL, inodo, &eof);
+    }
+
+    // Liberar los bloques indirectos de manera recursiva
+    while (!eof) {
+        nRangoBL = obtener_nRangoBL(inodo, nBL, &ptr);
+        nivel_punteros = nRangoBL;
+        liberados += liberar_indirectos_recursivo(&nBL, primerBL, ultimoBL, inodo, nRangoBL, 
+                                                  nivel_punteros, &ptr, &eof);
+    }
+
+    return liberados;
 }
 
-int mi_truncar_f(unsigned int ninodo, unsigned int nbytes) {
-    
+// Función para liberar bloques directos
+int liberar_directos(unsigned int *nBL, unsigned int ultimoBL, struct inodo *inodo, int *eof) {
+    int liberados = 0;
 
-    return EXITO;
+    for (int d = *nBL; d < DIRECTOS && !(*eof); d++) {
+        if (inodo->punterosDirectos[*nBL] != 0) {
+            liberar_bloque(inodo->punterosDirectos[*nBL]);
+            inodo->punterosDirectos[*nBL] = 0;
+            liberados++;
+        }
+        *nBL = *nBL + 1;  
+        if (*nBL > ultimoBL) *eof = 1; // Fin del archivo
+    }
+    
+    return liberados;
+}
+
+// Función para liberar bloques indirectos de manera recursiva
+int liberar_indirectos_recursivo(unsigned int *nBL, unsigned int primerBL, unsigned int ultimoBL, 
+                                 struct inodo *inodo, int nRangoBL, unsigned int nivel_punteros, 
+                                 unsigned int *ptr, int *eof) {
+    int liberados = 0, indice_inicial;
+    unsigned int bloquePunteros[NPUNTEROS], bloquePunteros_Aux[NPUNTEROS], bufferCeros[NPUNTEROS];
+    
+    memset(bufferCeros, 0, BLOCKSIZE);
+
+    if (*ptr) { // Si cuelga un bloque de punteros
+        indice_inicial = obtener_indice(*nBL, nivel_punteros);
+        if (indice_inicial == 0 || *nBL == primerBL) { // Solo leemos el bloque si no estaba cargado
+            if (bread(*ptr, bloquePunteros) == -1) 
+                return FALLO;
+            
+            // Guardamos copia del bloque para ver si hay cambios
+            memcpy(bloquePunteros_Aux, bloquePunteros, BLOCKSIZE);
+        }
+
+        // Exploramos el bloque de punteros iterando el índice
+        for (int i = indice_inicial; i < NPUNTEROS && !(*eof); i++) {
+            if (bloquePunteros[i] != 0) {
+                if (nivel_punteros == 1) {
+                    liberar_bloque(bloquePunteros[i]);  // De datos
+                    bloquePunteros[i] = 0;
+                    liberados++;
+                    (*nBL)++;
+                } else {
+                    liberados += liberar_indirectos_recursivo(nBL, primerBL, ultimoBL, inodo, nRangoBL, 
+                                                           nivel_punteros - 1, &bloquePunteros[i], eof);
+                }
+            } else {
+                switch (nivel_punteros) {
+                    case 1: 
+                        *nBL = *nBL + 1;
+                        break;
+                    case 2: 
+                        *nBL += NPUNTEROS;
+                        break;
+                    case 3: 
+                        *nBL += NPUNTEROS * NPUNTEROS;
+                        break;
+                }
+            }
+            
+            if (*nBL > ultimoBL) *eof = 1;  // Comprobamos si hemos llegado al final del archivo
+        }
+
+        // Si el bloque de punteros es distinto al original
+        if (memcmp(bloquePunteros, bloquePunteros_Aux, BLOCKSIZE) != 0) {
+            if (memcmp(bloquePunteros, bufferCeros, BLOCKSIZE) != 0) {
+                if (bwrite(*ptr, bloquePunteros) == FALLO) 
+                    return FALLO;
+            } else {
+                liberar_bloque(*ptr);  // De punteros
+                *ptr = 0;  // Ponemos a 0 el puntero que apuntaba al bloque liberado
+                if (nRangoBL == nivel_punteros)
+                    inodo->punterosIndirectos[nRangoBL - 1] = 0;  // Se pone a 0 en el inodo
+                liberados++;
+            }
+        }
+    } else {  // Si *ptr == 0
+        switch (nRangoBL) {
+            case 1: *nBL = INDIRECTOS0; break;
+            case 2: *nBL = INDIRECTOS1; break;
+            case 3: *nBL = INDIRECTOS2; break;
+        }
+    }
+
+    return liberados;
+}
+
+int liberar_inodo(unsigned int ninodo){
+    struct inodo inodo;
+    if (leer_inodo(ninodo, &inodo) == FALLO) {
+        perror("Error al leer inodo");
+        return FALLO;
+    }
+
+    // Liberar bloques ocupados
+    unsigned int librds=liberar_bloques_inodo(0, &inodo);
+    if (librds == FALLO) {
+        perror("Error al liberar bloques del inodo");
+        return FALLO;
+    }
+    if((inodo.numBloquesOcupados-librds) != 0){
+        perror("Error al liberar bloques del inodo");
+        return FALLO;
+    }
+    inodo.numBloquesOcupados-=librds;
+    inodo.tamEnBytesLog=0;
+    inodo.tipo='l';
+
+    struct superbloque SB;
+    if (bread(posSB, &SB) == FALLO) {
+        perror("Error al leer el superbloque");
+        return FALLO;
+    }
+    inodo.punterosDirectos[0]=SB.posPrimerInodoLibre;
+    SB.cantInodosLibres++;
+    if(bwrite(posSB, &SB) == FALLO){
+        perror("Error al escribir el superbloque");
+        return FALLO;
+    }
+    inodo.ctime=time(NULL);
+    if(escribir_inodo(ninodo, &inodo) == FALLO){
+        perror("Error al escribir el inodo");
+        return FALLO;
+    }
+    return ninodo;
 }

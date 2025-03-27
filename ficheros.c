@@ -55,8 +55,6 @@ int mi_write_f(unsigned int ninodo, const void *buf_original, unsigned int offse
 
 
 int mi_read_f(unsigned int ninodo, void *buf_original, unsigned int offset, unsigned int nbytes) {
-
-    
     struct inodo inodo;
     if (leer_inodo(ninodo, &inodo) == FALLO) {
         perror("Error al leer inodo");
@@ -160,4 +158,32 @@ int mi_chmod_f(unsigned int ninodo, unsigned char permisos) {
 
     return EXITO;
 
+}
+
+int mi_truncar_f(unsigned int ninodo, unsigned int nbytes){
+    struct inodo inodo;
+    if (leer_inodo(ninodo, &inodo) == FALLO) {
+        perror("Error al leer inodo");
+        return FALLO;
+    }
+
+    // Comprobar si el tamaño a truncar es mayor que el tamaño actual
+    if (nbytes > inodo.tamEnBytesLog) {
+        fprintf(stderr, "El tamaño a truncar es mayor que el tamaño actual del fichero\n");
+        return FALLO;
+    }
+
+    // Actualizar el tamaño lógico del fichero
+    inodo.tamEnBytesLog = nbytes;
+
+    // Actualizar ctime del inodo
+    inodo.ctime = time(NULL);
+
+    // Escribir el inodo actualizado
+    if (escribir_inodo(ninodo, &inodo) == FALLO) {
+        perror("Error al escribir el inodo actualizado");
+        return FALLO;
+    }
+
+    return EXITO;
 }

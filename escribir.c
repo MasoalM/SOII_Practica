@@ -74,7 +74,7 @@ int leamosInodo(int ninodo, int offset, int bytesEscritos){
         return FALLO;
     }
 
-    printf("Tamaño fichero %d\n\n", bytesEscritos);
+    printf("Longitud texto %d\n\n", bytesEscritos);
 
     printf("Nº inodo reservado %d\n", ninodo);
     printf("offset %d\n", offset);
