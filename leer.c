@@ -52,7 +52,7 @@ int main(int argc, char **argv) {
     }
 
     // Mostrar cantidad total de bytes leídos
-    printf("\nBytes leídos: %d\nTamaño lógico del inodo: %d\n", total_leidos, in.tamEnBytesLog);
+    fprintf(stderr, "\nBytes leídos: %d\nTamaño lógico del inodo: %d\n", total_leidos, in.tamEnBytesLog);
 
     // Desmontar el dispositivo virtual
     if (bumount() == FALLO) {
