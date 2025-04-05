@@ -161,9 +161,17 @@ int mi_chmod_f(unsigned int ninodo, unsigned char permisos) {
 }
 
 int mi_truncar_f(unsigned int ninodo, unsigned int nbytes){
+    
+    unsigned int ultimoBL, primerBL, liberados;
     struct inodo inodo;
     if (leer_inodo(ninodo, &inodo) == FALLO) {
         perror("Error al leer inodo");
+        return FALLO;
+    }
+
+    // Comprobar permisos de escritura
+    if ((inodo.permisos & 2) != 2) {
+        fprintf(stderr, "No hay permisos de lectura\n");
         return FALLO;
     }
 
@@ -171,13 +179,38 @@ int mi_truncar_f(unsigned int ninodo, unsigned int nbytes){
     if (nbytes > inodo.tamEnBytesLog) {
         fprintf(stderr, "El tamaño a truncar es mayor que el tamaño actual del fichero\n");
         return FALLO;
+    }  
+
+    
+    //primerBL
+    if(nbytes % BLOCKSIZE == 0) {
+        primerBL= nbytes/BLOCKSIZE;
+    } else {
+        primerBL=nbytes/BLOCKSIZE+1;
     }
+    if (inodo.tamEnBytesLog % BLOCKSIZE == 0){ 
+        ultimoBL = inodo.tamEnBytesLog / BLOCKSIZE - 1;
+    }else{  
+        ultimoBL = inodo.tamEnBytesLog / BLOCKSIZE;
+    }
+    printf("[liberar_bloques_inodo()-> primer BL: %d, último BL: %u]\n",primerBL,  ultimoBL); //BIEN
+    //liberamos
+    liberados=liberar_bloques_inodo(primerBL, &inodo);
+
+    // Actualizar ctime del inodo
+    inodo.ctime = time(NULL);
+    // Actualizar mtime del inodo
+    inodo.mtime = time(NULL);
 
     // Actualizar el tamaño lógico del fichero
     inodo.tamEnBytesLog = nbytes;
 
-    // Actualizar ctime del inodo
-    inodo.ctime = time(NULL);
+    //for(int i = nbytes; i > 0; i--){
+    //    inodo.tamEnBytesLog--;
+    //}
+    inodo.numBloquesOcupados-=liberados;
+
+    
 
     // Escribir el inodo actualizado
     if (escribir_inodo(ninodo, &inodo) == FALLO) {
@@ -185,5 +218,5 @@ int mi_truncar_f(unsigned int ninodo, unsigned int nbytes){
         return FALLO;
     }
 
-    return EXITO;
+    return liberados;
 }

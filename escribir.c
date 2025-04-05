@@ -82,8 +82,6 @@ int leamosInodo(int ninodo, int offset, int bytesEscritos){
 
     struct STAT stat;
     if(mi_stat_f(ninodo, &stat)==FALLO) return FALLO;
-    //printf("stat.tamEnBytesLog=%d\n", stat.tamEnBytesLog);
-    //printf("stat.numBloquesOcupados=%d\n\n", stat.numBloquesOcupados);
 
     printf("tamEnBytesLog: %d\n", inodo.tamEnBytesLog);
     printf("bloques ocupados: %d\n\n\n\n\n\n", inodo.numBloquesOcupados);
