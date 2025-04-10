@@ -1,4 +1,4 @@
-#include "ficheros_basico.h"
+#include "directorios.h"
 #include <string.h>
 
 // Método main

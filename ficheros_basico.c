@@ -597,7 +597,7 @@ int liberar_bloques_inodo(unsigned int primerBL, struct inodo *inodo) {
     // Liberar los bloques indirectos de manera recursiva
     while (!eof) {
         //printf("EOF: %d", eof);
-        unsigned int temp=nBL;
+        //unsigned int temp=nBL;
         nRangoBL = obtener_nRangoBL(inodo, nBL, &ptr);
         
         nivel_punteros = nRangoBL;
@@ -621,7 +621,7 @@ int liberar_directos(unsigned int *nBL, unsigned int ultimoBL, struct inodo *ino
 
     for (int d = *nBL; (d < DIRECTOS) && !(*eof); d++) {
         if (inodo->punterosDirectos[*nBL] != 0) {
-            printf("directos[liberar_bloques_inodo()-> liberado BF %u de datos para BL %u]\n", inodo->punterosDirectos[*nBL], *nBL); //BIEN
+            printf("[liberar_bloques_inodo()-> liberado BF %u de datos para BL %u]\n", inodo->punterosDirectos[*nBL], *nBL); //BIEN
             liberar_bloque(inodo->punterosDirectos[*nBL]);
             inodo->punterosDirectos[*nBL] = 0;
             liberados++;
