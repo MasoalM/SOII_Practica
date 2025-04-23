@@ -2,8 +2,8 @@
 
 void mostrar_buscar_entrada(char *camino, char reservar) {
     unsigned int p_inodo_dir = 0;
-    unsigned int p_inodo = 0;
-    unsigned int p_entrada = 0;
+    unsigned int p_inodo = 0;    
+    unsigned int p_entrada = 0;  
     int error;
     printf("\ncamino: %s, reservar: %d\n", camino, reservar);
     if ((error = buscar_entrada(camino, &p_inodo_dir, &p_inodo, &p_entrada, reservar, 6)) < 0) {

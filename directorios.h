@@ -9,6 +9,7 @@
 #define ERROR_NO_SE_PUEDE_CREAR_ENTRADA_EN_UN_FICHERO (-8)
 
 #define TAMNOMBRE 60 //tamaño del nombre de directorio o fichero, en Ext2 = 256
+
 struct entrada {
   char nombre[TAMNOMBRE];
   unsigned int ninodo;
@@ -17,3 +18,6 @@ struct entrada {
 int extraer_camino(const char *camino, char *inicial, char *final, char *tipo);
 int buscar_entrada(const char *camino_parcial, unsigned int *p_inodo_dir, unsigned int *p_inodo, unsigned int *p_entrada, char reservar, unsigned char permisos);
 void mostrar_error_buscar_entrada(int error);
+int calcular_num_entradas(int ninodo_dir, int *n_entradas);
+int escribir_entrada(int ninodo_dir, struct entrada *ent, int num_entrada);
+int leer_entrada(int ninodo_dir, struct entrada *ent, int num_entrada);

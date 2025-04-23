@@ -3,33 +3,30 @@
 #include <string.h>
 #include <stdlib.h>
 
-int extraer_camino(const char *camino, char *inicial, char *final, char *tipo){
+#define NUM_ENTRADAS_POR_BLOQUE (BLOCKSIZE / sizeof(struct entrada)) 
+
+int extraer_camino(const char *camino, char *inicial, char *final, char *tipo) {
     if (camino[0] != '/') {
-        return FALLO; // Error: el camino no comienza con '/'
+        return FALLO;
     }
- 
-    char *copia= malloc(strlen(camino) + 1);
- 
-    if (copia == NULL) {
-      perror("Error al reservar memoria");
-       return FALLO;
+
+    const char *segundo_trozo = strchr(camino + 1, '/'); // Busca el segundo '/'
+    if (segundo_trozo == NULL) {
+        // Es un fichero
+        strcpy(inicial, camino + 1); // omite el primer '/'
+        final[0] = '\0'; // cadena vacía
+        *tipo = 'f';
+    } else {
+        // Es un directorio
+        size_t len = segundo_trozo - (camino + 1); // longitud del nombre de directorio
+        strncpy(inicial, camino + 1, len);
+        inicial[len] = '\0'; // Aseguramos terminación
+        strcpy(final, segundo_trozo); // el resto del camino, con '/' incluido
+        *tipo = 'd';
     }
- 
-    // Copiar el contenido
-    strcpy(copia, camino);
- 
-    char *token = strtok(copia, "/");
-    inicial=token;
-    *tipo='f';
-    final = "";
-    while (token != NULL) {
-        *tipo='d';
-        printf("Token: %s\n", token);
-        token = strtok(NULL, "/");
-        strcat(final, token);
-    }
+
     return EXITO;
-}    
+}
 
 int buscar_entrada(const char *camino_parcial, unsigned int *p_inodo_dir, unsigned int *p_inodo, unsigned int *p_entrada, char reservar, unsigned char permisos) {
     struct entrada entrada;
@@ -39,24 +36,33 @@ int buscar_entrada(const char *camino_parcial, unsigned int *p_inodo_dir, unsign
     char tipo;
     int cant_entradas_inodo, num_entrada_inodo = 0;
     struct superbloque SB;
-
-    if(bread(posSB, &SB)) return FALLO;
-
+    if(bread(posSB, &SB)==FALLO) return FALLO;
     // Caso base: raíz
     if (strcmp(camino_parcial, "/") == 0) {
         *p_inodo = SB.posInodoRaiz;
         *p_entrada = 0;
         return EXITO;
     }
-
+    
     // Separar el camino
     if (extraer_camino(camino_parcial, inicial, final, &tipo) < 0) {
         return ERROR_CAMINO_INCORRECTO;
     }
+    
+    printf("[buscar_entrada()→ inicial: %s, final: %s, reservar: %d]\n", inicial, final, reservar);
 
     // Leer el inodo del directorio actual
-    if (leer_inodo(*p_inodo_dir, &inodo_dir) < 0) return FALLO;
+    if (leer_inodo(*p_inodo_dir, &inodo_dir) < 0) {
+        printf("ERROR AL LEER INODO");
+        return FALLO;
+    }    
+    printf("PERMISOS INICIALMENTE: %d\n", inodo_dir.permisos);
+
+    //falla
+    printf("Permisos: %d\n permisos & 4: %d\n", inodo_dir.permisos, (inodo_dir.permisos&4));
     if ((inodo_dir.permisos & 4) != 4) return ERROR_PERMISO_LECTURA;
+
+    //deberíamos llenar el buffer de lectura a 0
 
     // Calcular entradas del inodo
     if (calcular_num_entradas(*p_inodo_dir, &cant_entradas_inodo) < 0) return FALLO;
@@ -79,7 +85,9 @@ int buscar_entrada(const char *camino_parcial, unsigned int *p_inodo_dir, unsign
 
         strcpy(entrada.nombre, inicial);
         if (tipo == 'd') {
+            printf("final %s\n", final);
             if (strcmp(final, "/") == 0) {
+                printf("PERMISOS: %d\n", permisos);
                 entrada.ninodo = reservar_inodo('d', permisos);
             } else {
                 return ERROR_NO_EXISTE_DIRECTORIO_INTERMEDIO;
@@ -115,18 +123,55 @@ int buscar_entrada(const char *camino_parcial, unsigned int *p_inodo_dir, unsign
     return buscar_entrada(final, p_inodo_dir, p_inodo, p_entrada, reservar, permisos);
 }
 
+int leer_entrada(int ninodo_dir, struct entrada *ent, int num_entrada) {
+    struct inodo inodo_dir;
+    leer_inodo(ninodo_dir, &inodo_dir);
+
+    //int entrada_por_bloque = sizeof(struct entrada);
+    int bloque = num_entrada / NUM_ENTRADAS_POR_BLOQUE;
+    int offset = num_entrada % NUM_ENTRADAS_POR_BLOQUE;
+
+    struct entrada buffer[NUM_ENTRADAS_POR_BLOQUE];
+    bread(inodo_dir.punterosDirectos[bloque], buffer); // Función ficticia
+
+    *ent = buffer[offset];
+    return 0;
+}
+
+int escribir_entrada(int ninodo_dir, struct entrada *ent, int num_entrada) {
+    struct inodo inodo_dir;
+    leer_inodo(ninodo_dir, &inodo_dir);
+
+    int bloque = num_entrada / NUM_ENTRADAS_POR_BLOQUE;
+    int offset = num_entrada % NUM_ENTRADAS_POR_BLOQUE;
+
+    struct entrada buffer[NUM_ENTRADAS_POR_BLOQUE];
+    bread(inodo_dir.punterosDirectos[bloque], buffer); // cargar el bloque
+    buffer[offset] = *ent;
+    bwrite(inodo_dir.punterosDirectos[bloque], buffer); // guardar
+
+    return 0;
+}
+
+int calcular_num_entradas(int ninodo_dir, int *n_entradas) {
+    struct inodo inodo;
+    if(leer_inodo(ninodo_dir, &inodo)==FALLO) return FALLO;
+
+    *n_entradas = inodo.tamEnBytesLog / sizeof(struct entrada);
+    return EXITO;
+}
 
 
 void mostrar_error_buscar_entrada(int error) {
     // fprintf(stderr, "Error: %d\n", error);
     switch (error) {
-        case -2: fprintf(stderr, "Error: Camino incorrecto.\n"); break;
-        case -3: fprintf(stderr, "Error: Permiso denegado de lectura.\n"); break;
-        case -4: fprintf(stderr, "Error: No existe el archivo o el directorio.\n"); break;
-        case -5: fprintf(stderr, "Error: No existe algún directorio intermedio.\n"); break;
-        case -6: fprintf(stderr, "Error: Permiso denegado de escritura.\n"); break;
-        case -7: fprintf(stderr, "Error: El archivo ya existe.\n"); break;
-        case -8: fprintf(stderr, "Error: No es un directorio.\n"); break;
+        case -2: fprintf(stderr, RED "Error: Camino incorrecto.\n" WHITE); break;
+        case -3: fprintf(stderr, RED "Error: Permiso denegado de lectura.\n" WHITE); break;
+        case -4: fprintf(stderr, RED "Error: No existe el archivo o el directorio.\n" WHITE); break;
+        case -5: fprintf(stderr, RED "Error: No existe algún directorio intermedio.\n" WHITE); break;
+        case -6: fprintf(stderr, RED "Error: Permiso denegado de escritura.\n" WHITE); break;
+        case -7: fprintf(stderr, RED "Error: El archivo ya existe.\n" WHITE); break;
+        case -8: fprintf(stderr, RED "Error: No es un directorio.\n" WHITE); break;
     }
 }
  
