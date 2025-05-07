@@ -510,11 +510,11 @@ int traducir_bloque_inodo(unsigned int ninodo, unsigned int nblogico, unsigned c
             // Establecer en el inodo el puntero indirecto correspondiente
             if(nivel_punteros == nRangoBL) {
                 inodo.punterosIndirectos[nRangoBL - 1] = ptr;
-                printf("[traducir_bloque_inodo()→ inodo.punterosIndirectos[%d] = %d (reservado BF %d para punteros_nivel%d)]\n", nRangoBL-1, ptr, ptr, nRangoBL);
+                //printf("[traducir_bloque_inodo()→ inodo.punterosIndirectos[%d] = %d (reservado BF %d para punteros_nivel%d)]\n", nRangoBL-1, ptr, ptr, nRangoBL);
             } else {
                 buffer[indice] = ptr;
-                //printf("[traducir_bloque_inodo()→ punteros_nivel%d[%d] = %d (reservado BF %d para punteros_nivel%d)]\n", nivel_punteros, obtener_indice(nblogico, nivel_punteros), ptr, ptr, nivel_punteros);
-                printf("[traducir_bloque_inodo()→ punteros_nivel%d[%d] = %d (reservado BF %d para punteros_nivel%d)]\n", (nivel_punteros+1), obtener_indice(nblogico, (nivel_punteros+1)), ptr, ptr, (nivel_punteros));
+                //ya estaba así antes del abajo//printf("[traducir_bloque_inodo()→ punteros_nivel%d[%d] = %d (reservado BF %d para punteros_nivel%d)]\n", nivel_punteros, obtener_indice(nblogico, nivel_punteros), ptr, ptr, nivel_punteros);
+                //printf("[traducir_bloque_inodo()→ punteros_nivel%d[%d] = %d (reservado BF %d para punteros_nivel%d)]\n", (nivel_punteros+1), obtener_indice(nblogico, (nivel_punteros+1)), ptr, ptr, (nivel_punteros));
                 if (bwrite(ptr_ant, buffer) == FALLO) { // Guardar en el dispositivo
                     perror("Error al guardar en el dispositivo");
                     return FALLO;
@@ -541,10 +541,10 @@ int traducir_bloque_inodo(unsigned int ninodo, unsigned int nblogico, unsigned c
 
         if (nRangoBL == 0) {  // Puntero directo
             inodo.punterosDirectos[nblogico] = ptr;
-            printf("[traducir_bloque_inodo()→ inodo.punterosDirectos[%d] = %d (reservado BF %d para BL %d)]\n", nblogico, ptr, ptr, nblogico);
+            //printf("[traducir_bloque_inodo()→ inodo.punterosDirectos[%d] = %d (reservado BF %d para BL %d)]\n", nblogico, ptr, ptr, nblogico);
         } else {
             buffer[indice] = ptr;
-            printf("[traducir_bloque_inodo()→ punteros_nivel%d[%d] = %d (reservado BF %d para BL %d)]\n", (nivel_punteros+1), obtener_indice(nblogico, (nivel_punteros+1)), ptr, ptr, nblogico);
+            //printf("[traducir_bloque_inodo()→ punteros_nivel%d[%d] = %d (reservado BF %d para BL %d)]\n", (nivel_punteros+1), obtener_indice(nblogico, (nivel_punteros+1)), ptr, ptr, nblogico);
             //OG printf("[traducir_bloque_inodo()→ punteros_nivel%d[%d] = %d (reservado BF %d para punteros_nivel%d)]\n", (nivel_punteros+1), obtener_indice(nblogico, (nivel_punteros+1)), ptr, ptr, (nivel_punteros+1));
             if (bwrite(ptr_ant, buffer) == FALLO) { // Guardar en el dispositivo
                 perror("Error al guardar en el dispositivo");
