@@ -51,7 +51,7 @@ int buscar_entrada(const char *camino_parcial, unsigned int *p_inodo_dir, unsign
         return ERROR_CAMINO_INCORRECTO;
     }
     
-    printf("[buscar_entrada()→ inicial: %s, final: %s, reservar: %d]\n", inicial, final, reservar);
+    printf(GRAY "[buscar_entrada()→ inicial: %s, final: %s, reservar: %d]\n" WHITE , inicial, final, reservar);
 
     // Leer el inodo del directorio actual
     if (leer_inodo(*p_inodo_dir, &inodo_dir) < 0) {
@@ -67,10 +67,10 @@ int buscar_entrada(const char *camino_parcial, unsigned int *p_inodo_dir, unsign
     }
 
 
-    printf("PERMISOS INICIALMENTE: %d\n", inodo_dir.permisos);
+    //////////////////////////////////////////////printf("PERMISOS INICIALMENTE: %d\n", inodo_dir.permisos);
 
     //falla
-    printf("Permisos: %d\n permisos & 4: %d\n", inodo_dir.permisos, (inodo_dir.permisos&4));
+    ///////////////////printf("Permisos: %d\n permisos & 4: %d\n", inodo_dir.permisos, (inodo_dir.permisos&4));
     if ((inodo_dir.permisos & 4) != 4) return ERROR_PERMISO_LECTURA;
 
     //deberíamos llenar el buffer de lectura a 0
@@ -123,15 +123,17 @@ int buscar_entrada(const char *camino_parcial, unsigned int *p_inodo_dir, unsign
 
         strcpy(entrada.nombre, inicial);
         if (tipo == 'd') {
-            printf("final %s\n", final);
+            //////////////////////////////////////////////////////////printf("final %s\n", final);
             if (strcmp(final, "/") == 0) {
-                printf("PERMISOS: %d\n", permisos);
+                ////////////////////////////////////////////////////////////printf("PERMISOS: %d\n", permisos);
                 entrada.ninodo = reservar_inodo('d', permisos);
+                printf(GRAY "[buscar_entrada()→ reservado inodo %d tipo d con permisos %d para %s]\n" WHITE , entrada.ninodo, permisos, inicial);
             } else {
                 return ERROR_NO_EXISTE_DIRECTORIO_INTERMEDIO;
             }
         } else {
             entrada.ninodo = reservar_inodo('f', permisos);
+            printf(GRAY "[buscar_entrada()→ reservado inodo %d tipo f con permisos %d para %s]\n" WHITE , entrada.ninodo, permisos, inicial);
         }
 
         if (entrada.ninodo < 0) return FALLO;
@@ -155,6 +157,7 @@ int buscar_entrada(const char *camino_parcial, unsigned int *p_inodo_dir, unsign
 
         *p_inodo = entrada.ninodo;
         *p_entrada = num_entrada_inodo;
+        printf(GRAY "[buscar_entrada()→ creada entrada: %s, %d]\n" WHITE , inicial, entrada.ninodo);
         return EXITO;
     }
 
