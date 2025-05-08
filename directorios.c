@@ -1,4 +1,4 @@
-#include "directorios.h" // directorios.h?
+#include "directorios.h"
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -219,4 +219,68 @@ void mostrar_error_buscar_entrada(int error) {
         case -8: fprintf(stderr, RED "Error: No es un directorio.\n" WHITE); break;
     }
 }
+
+int mi_creat(const char *camino, unsigned char permisos){
+    unsigned int p_inodo_dir = 0;
+    unsigned int p_inodo = 0;
+    unsigned int p_entrada = 0;
+    
+    return buscar_entrada(camino, &p_inodo_dir, &p_inodo, &p_entrada, 1, permisos);
+}
+
+int mi_dir(const char *camino, char *buffer) {
+    unsigned int p_inodo_dir = 0, p_inodo = 0, p_entrada = 0;
+    struct inodo inodo;
+    struct entrada entradas[BLOCKSIZE / sizeof(struct entrada)];
+    int offset = 0, total = 0, leidos;
+
+    // Buscar la entrada y obtener el inodo
+    int r = buscar_entrada(camino, &p_inodo_dir, &p_inodo, &p_entrada, 0, 0);
+    if (r < 0) return FALLO;
+
+    // Leer el inodo del camino
+    if (leer_inodo(p_inodo, &inodo) < 0) return FALLO;
+
+    // Verificar que sea un directorio
+    if (inodo.tipo != 'd') return ERROR_NO_SE_PUEDE_CREAR_ENTRADA_EN_UN_FICHERO;
+
+    // Verificar permiso de lectura
+    if (!(inodo.permisos & 4)) return ERROR_PERMISO_LECTURA;
+
+    // Leer todas las entradas del directorio
+    int n_entradas = inodo.tamEnBytesLog / sizeof(struct entrada);
+    while (total < n_entradas) {
+        leidos = mi_read_f(p_inodo, entradas, offset, BLOCKSIZE);
+        if (leidos < 0) return FALLO;
+
+        int num = leidos / sizeof(struct entrada);
+        for (int i = 0; i < num && total < n_entradas; i++, total++) {
+            strcat(buffer, entradas[i].nombre);
+            strcat(buffer, "\t");
+        }
+
+        offset += leidos;
+    }
+
+    return total;
+}
+
+int mi_chmod(const char *camino, unsigned char permisos) {
+    unsigned int p_inodo_dir = 0, p_inodo = 0, p_entrada = 0;
+
+    // Buscar la entrada y obtener el inodo
+    int r = buscar_entrada(camino, &p_inodo_dir, &p_inodo, &p_entrada, 0, 0);
+    if (r < 0) return FALLO;
+    return mi_chmod_f(p_inodo, permisos);
+}
  
+//NO REVISADO
+int mi_stat(const char *camino, struct STAT *p_stat){
+    unsigned int p_inodo_dir = 0, p_inodo = 0, p_entrada = 0;
+    
+    // Buscar la entrada y obtener el inodo
+    int r = buscar_entrada(camino, &p_inodo_dir, &p_inodo, &p_entrada, 0, 0);
+    if (r < 0) return FALLO;
+    printf( BLUE"Nº de inodo: %d\n"WHITE , p_inodo);
+    return mi_stat_f(p_inodo, p_stat);
+}
