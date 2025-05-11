@@ -161,21 +161,6 @@ int leer_entrada(int ninodo_dir, struct entrada *ent, int num_entrada) {
     return 0;
 }
 
-/* int escribir_entrada(int ninodo_dir, struct entrada *ent, int num_entrada) {
-    struct inodo inodo_dir;
-    leer_inodo(ninodo_dir, &inodo_dir);
-
-    int bloque = num_entrada / NUM_ENTRADAS_POR_BLOQUE;
-    int offset = num_entrada % NUM_ENTRADAS_POR_BLOQUE;
-
-    struct entrada buffer[NUM_ENTRADAS_POR_BLOQUE];
-    bread(inodo_dir.punterosDirectos[bloque], buffer); // cargar el bloque
-    buffer[offset] = *ent;
-    bwrite(inodo_dir.punterosDirectos[bloque], buffer); // guardar
-
-    return 0;
-} */
-
 int calcular_num_entradas(int ninodo_dir, int *n_entradas) {
     struct inodo inodo;
     if(leer_inodo(ninodo_dir, &inodo)==FALLO) return FALLO;
@@ -264,22 +249,33 @@ int mi_stat(const char *camino, struct STAT *p_stat){
 
 //NIVEL 9
 
-int mi_write(const char *camino, const void *buf, unsigned int offset, unsigned int nbytes){
+int mi_write(const char *camino, const void *buf, unsigned int offset, unsigned int nbytes) {
     unsigned int p_inodo_dir = 0, p_inodo = 0, p_entrada = 0;
-    
-    // Buscar la entrada y obtener el inodo
-    int r = buscar_entrada(camino, &p_inodo_dir, &p_inodo, &p_entrada, 0, 0);
-    if (r < 0) return FALLO;
 
+    // Buscar la entrada
+    if (buscar_entrada(camino, &p_inodo_dir, &p_inodo, &p_entrada, 0, 0) < 0) return FALLO;
+
+    // Comprobar que es un fichero
+    struct inodo in;
+    if (leer_inodo(p_inodo, &in) == FALLO) return FALLO;
+    if (in.tipo != 'f') return FALLO;
+
+    // Escribir en el fichero
     return mi_write_f(p_inodo, buf, offset, nbytes);
 }
 
+
 int mi_read(const char *camino, void *buf, unsigned int offset, unsigned int nbytes) {
     unsigned int p_inodo_dir = 0, p_inodo = 0, p_entrada = 0;
-    
-    // Buscar la entrada y obtener el inodo
-    int r = buscar_entrada(camino, &p_inodo_dir, &p_inodo, &p_entrada, 0, 0);
-    if (r < 0) return FALLO;
 
+    // Buscar la entrada
+    if (buscar_entrada(camino, &p_inodo_dir, &p_inodo, &p_entrada, 0, 0) < 0) return FALLO;
+
+    // Comprobar que es un fichero
+    struct inodo in;
+    if (leer_inodo(p_inodo, &in) == FALLO) return FALLO;
+    if (in.tipo != 'f') return FALLO;
+
+    // Leer del fichero
     return mi_read_f(p_inodo, buf, offset, nbytes);
 }
