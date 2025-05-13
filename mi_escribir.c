@@ -17,6 +17,7 @@ int main(int argc, char **argv) {
     int escritos = mi_write(camino, &texto, offset, strlen(texto));
     if(escritos < 0){
         printf("Bytes escritos: 0 \n");
+        if(bumount() == FALLO) return FALLO;
         return FALLO;    
     } 
     printf("Bytes escritos: %d \n", escritos);

@@ -150,7 +150,6 @@ int leer_entrada(int ninodo_dir, struct entrada *ent, int num_entrada) {
     struct inodo inodo_dir;
     leer_inodo(ninodo_dir, &inodo_dir);
 
-    //int entrada_por_bloque = sizeof(struct entrada);
     int bloque = num_entrada / NUM_ENTRADAS_POR_BLOQUE;
     int offset = num_entrada % NUM_ENTRADAS_POR_BLOQUE;
 
@@ -160,6 +159,23 @@ int leer_entrada(int ninodo_dir, struct entrada *ent, int num_entrada) {
     *ent = buffer[offset];
     return 0;
 }
+
+/*
+int escribir_entrada(int ninodo_dir, struct entrada *ent, int num_entrada) {
+    struct inodo inodo_dir;
+    leer_inodo(ninodo_dir, &inodo_dir);
+
+    int bloque = num_entrada / NUM_ENTRADAS_POR_BLOQUE;
+    int offset = num_entrada % NUM_ENTRADAS_POR_BLOQUE;
+
+    struct entrada buffer[NUM_ENTRADAS_POR_BLOQUE];
+    bread(inodo_dir.punterosDirectos[bloque], buffer); // cargar el bloque
+    buffer[offset] = *ent;
+    bwrite(inodo_dir.punterosDirectos[bloque], buffer); // guardar
+
+    return EXITO;
+}
+*/
 
 int calcular_num_entradas(int ninodo_dir, int *n_entradas) {
     struct inodo inodo;
@@ -278,4 +294,89 @@ int mi_read(const char *camino, void *buf, unsigned int offset, unsigned int nby
 
     // Leer del fichero
     return mi_read_f(p_inodo, buf, offset, nbytes);
+}
+
+// NIVEL 10
+
+int mi_link(const char *camino1, const char *camino2) {
+    unsigned int p_inodo_dir1 = 0, p_inodo1 = 0, p_entrada1 = 0;
+    unsigned int p_inodo_dir2 = 0, p_inodo2 = 0, p_entrada2 = 0;
+
+    // Buscar la entrada                                               4
+    if (buscar_entrada(camino1, &p_inodo_dir1, &p_inodo1, &p_entrada1, 0, 0) < 0) return FALLO;
+
+    // Comprobar que es un fichero
+    struct inodo in1;
+    if (leer_inodo(p_inodo1, &in1) == FALLO) return FALLO;
+    if (in1.tipo != 'f') {
+        fprintf(stderr, RED "ERROR: SE ESPERABA UN FICHERO." WHITE); 
+        return FALLO;
+    } 
+    if ((in1.permisos & 4) != 4) { 
+        #if DEBUGN7    
+        fprintf(stderr, GREEN "[buscar_entrada()→ El inodo %d no tiene permisos de lectura]\n" RESET, *p_inodo_dir);
+        #endif
+        return ERROR_PERMISO_LECTURA;
+    }
+    
+    // Buscar la entrada
+    if (buscar_entrada(camino2, &p_inodo_dir2, &p_inodo2, &p_entrada2, 1, 6) < 0) return FALLO;
+
+    struct inodo in2;
+    // Comprobar que es un fichero
+    if (leer_inodo(p_inodo2, &in2) == FALLO) return FALLO;
+    if (in2.tipo != 'f') {
+        fprintf(stderr, RED "ERROR: SE ESPERABA UN FICHERO." WHITE); 
+        return FALLO;
+    }
+
+    struct entrada nwEntrada;
+
+    strcpy(nwEntrada.nombre, camino2);
+    nwEntrada.ninodo=p_inodo1;
+
+    if(escribir_entrada(p_inodo_dir2, &nwEntrada, p_entrada2)<0) return FALLO; // mi_write_f?????????????????????????????
+
+    //Actualizar número de links y tiempo del inodo
+    in1.nlinks++;
+    in1.ctime = time(NULL);
+    if(escribir_inodo(p_inodo1, &in1) < 0) return FALLO;
+
+    // Leer del fichero
+    return EXITO;
+}
+
+int mi_unlink(const char *camino) {
+    unsigned int p_inodo_dir = 0, p_inodo = 0, p_entrada = 0;
+
+    // Buscar la entrada                                               
+    if (buscar_entrada(camino, &p_inodo_dir, &p_inodo, &p_entrada, 0, 0) < 0) return FALLO;
+
+    // Comprobar que es un fichero
+    struct inodo in;
+    if (leer_inodo(p_inodo, &in) == FALLO) return FALLO;
+    if ((in.tipo != 'f') && (in.tamEnBytesLog>0)) {
+        fprintf(stderr, RED "ERROR: SE ESPERABA UN FICHERO." WHITE); 
+        return FALLO;
+    } 
+    
+    struct inodo inDir;
+    if (leer_inodo(p_inodo_dir, &inDir) == FALLO) return FALLO;
+    unsigned int nEntradas=(inDir.tamEnBytesLog/sizeof(struct entrada));
+    
+    if((nEntradas-1) == p_entrada) {
+        if(mi_truncar_f(p_inodo_dir, (inDir.tamEnBytesLog-sizeof(struct entrada))) == FALLO) return FALLO;
+    } else {
+        struct entrada entrada;
+        leer_entrada(p_inodo_dir, &entrada, nEntradas-1);
+        escribir_entrada(p_inodo_dir, &entrada, p_entrada); // mi_write_f?????????????????????????????
+        inDir.nlinks--;
+        if(inDir.nlinks==0){
+            if(liberar_inodo(p_inodo_dir) == FALLO) return FALLO;
+            return EXITO;
+        }
+        inDir.ctime=time(NULL);
+        if(escribir_inodo(p_inodo_dir, &inDir) == FALLO) return FALLO;
+    }
+    return EXITO;
 }
