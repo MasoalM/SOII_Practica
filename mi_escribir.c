@@ -8,16 +8,20 @@ int main(int argc, char **argv) {
     }
 
     char *camino = argv[2];
+      //obtenemos la ruta y comprobamos que no se refiera a un directorio
+    if (argv[2][strlen(argv[2])-1]=='/') {
+        fprintf(stderr, RED "Error: la ruta se corresponde a un directorio.\n" RESET);
+        exit(FALLO);
+    }
     char *texto = argv[3];
     int offset = atoi(argv[4]);
     
     // Montar dispositivo virtual
     if(bmount(argv[1])==FALLO) return FALLO;
     printf("Longitud texto: %ld \n", strlen(texto));
-    int escritos = mi_write(camino, &texto, offset, strlen(texto));
+    int escritos = mi_write(camino, texto, offset, strlen(texto));
     if(escritos < 0){
         printf("Bytes escritos: 0 \n");
-        if(bumount() == FALLO) return FALLO;
         return FALLO;    
     } 
     printf("Bytes escritos: %d \n", escritos);

@@ -6,7 +6,8 @@ int main(int argc, char **argv){
         return FALLO;
     }
 
-    int r=mi_unlink(argv[2]);
+    int r;
+    r=mi_unlink(argv[2]);
     if(r<0){
         mostrar_error_buscar_entrada(r);
         if (bumount() == FALLO) {

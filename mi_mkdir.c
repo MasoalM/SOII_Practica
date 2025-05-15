@@ -12,7 +12,13 @@ int main(int argc, char **argv) {
         fprintf(stderr, RED "Error: modo inválido: <<%s>>\n" WHITE, argv[2]);
         return FALLO;
     }
-    
+
+    // Verificar que la ruta termina en '/'
+    //if (argv[3][strlen(argv[3]) - 1] != '/') {
+    //    fprintf(stderr, RED "THE END IS NEVER THE END IS NEVER THE END IS NEVER)\n" WHITE);
+    //    return FALLO;
+    //}
+
     // Montar sistema de ficheros
     if(bmount(argv[1])==FALLO) return FALLO;
 

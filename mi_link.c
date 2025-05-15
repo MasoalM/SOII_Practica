@@ -13,7 +13,8 @@ int main(int argc, char **argv){
         return FALLO;
     }
 
-    int r = mi_link(argv[2], argv[3]);
+    int r;
+    r = mi_link(argv[2], argv[3]);
 
     if(r<0){
         mostrar_error_buscar_entrada(r);

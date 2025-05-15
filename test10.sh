@@ -17,8 +17,8 @@ echo
 echo -e "\x1B[38;2;17;245;120m$ ./mi_mkdir disco 6 /dir1/dir11/\x1b[0m"
 ./mi_mkdir disco 6 /dir1/dir11/
 echo
-echo -e "\x1B[38;2;17;245;120m$ ./mi_touch disco 6 /dir1/dir11/fic1\x1b[0m"
-./mi_touch disco 6 /dir1/dir11/fic1
+echo -e "\x1B[38;2;17;245;120m$ ./mi_mkdir disco 6 /dir1/dir11/fic1\x1b[0m"
+./mi_mkdir disco 6 /dir1/dir11/fic1
 echo
 echo -e "\x1B[38;2;17;245;120m$ ./mi_escribir disco /dir1/dir11/fic1 hellooooooo 0\x1b[0m"
 ./mi_escribir disco /dir1/dir11/fic1 "hellooooooo" 0
@@ -48,8 +48,8 @@ echo -e "\x1B[38;2;17;245;120m##################################################
 echo -e "\x1B[38;2;17;245;120m$ ./mi_link disco /dir1/dir11/fic3 /di2/dir21/fic4  #camino1 ha de existir\x1b[0m"
 ./mi_link disco /dir1/dir11/fic3 /di2/dir21/fic4
 echo
-echo -e "\x1B[38;2;17;245;120m$ ./mi_touch disco 6 /dir1/dir11/fic3\x1b[0m"
-./mi_touch disco 6 /dir1/dir11/fic3 
+echo -e "\x1B[38;2;17;245;120m$ ./mi_mkdir disco 6 /dir1/dir11/fic3\x1b[0m"
+./mi_mkdir disco 6 /dir1/dir11/fic3 
 echo
 echo -e "\x1B[38;2;17;245;120m$ ./mi_link disco /dir1/dir11/fic3 /dir2/dir21/fic4\x1b[0m"
 ./mi_link disco /dir1/dir11/fic3 /dir2/dir21/fic4
