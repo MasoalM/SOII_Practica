@@ -367,7 +367,7 @@ int mi_link(const char *camino1, const char *camino2) {
     unsigned int p_inodo_dir1 = 0, p_inodo1 = 0, p_entrada1 = 0;
     unsigned int p_inodo_dir2 = 0, p_inodo2 = 0, p_entrada2 = 0;
 
-    // Buscar la entrada                                               4  
+    // Buscar la entrada                                               
     if (buscar_entrada(camino1, &p_inodo_dir1, &p_inodo1, &p_entrada1, 0, 0) < 0) return FALLO;
 
     // Comprobar que es un fichero
