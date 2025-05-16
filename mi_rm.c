@@ -6,6 +6,11 @@ int main(int argc, char **argv){
         return FALLO;
     }
 
+    if (bmount(argv[1]) == FALLO) {
+        fprintf(stderr, RED "Error: No se pudo montar el dispositivo.\n" WHITE);
+        return FALLO;
+    }
+
     int r;
     r=mi_unlink(argv[2]);
     if(r<0){

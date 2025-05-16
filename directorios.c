@@ -216,6 +216,7 @@ int calcular_num_entradas(int ninodo_dir, int *n_entradas) {
 void mostrar_error_buscar_entrada(int error) {
     // fprintf(stderr, "Error: %d\n", error);
     switch (error) {
+        case -1: fprintf(stderr, RED "ERROR GENÉRICO POR IMPLEMENTAR\n"WHITE); break;
         case -2: fprintf(stderr, RED "Error: Camino incorrecto.\n" WHITE); break;
         case -3: fprintf(stderr, RED "Error: Permiso denegado de lectura.\n" WHITE); break;
         case -4: fprintf(stderr, RED "Error: No existe el archivo o el directorio.\n" WHITE); break;
@@ -368,7 +369,7 @@ int mi_link(const char *camino1, const char *camino2) {
     unsigned int p_inodo_dir2 = 0, p_inodo2 = 0, p_entrada2 = 0;
 
     // Buscar la entrada                                               
-    if (buscar_entrada(camino1, &p_inodo_dir1, &p_inodo1, &p_entrada1, 0, 0) < 0) return FALLO;
+    if (buscar_entrada(camino1, &p_inodo_dir1, &p_inodo1, &p_entrada1, 0, 0) < 0) return ERROR_NO_EXISTE_ENTRADA_CONSULTA;
 
     // Comprobar que es un fichero
     struct inodo in1;
@@ -385,22 +386,32 @@ int mi_link(const char *camino1, const char *camino2) {
     }
     
     // Buscar la entrada
-    if (buscar_entrada(camino2, &p_inodo_dir2, &p_inodo2, &p_entrada2, 1, 6) < 0) return FALLO;
+    if (buscar_entrada(camino2, &p_inodo_dir2, &p_inodo2, &p_entrada2, 1, 6) < 0) return ERROR_ENTRADA_YA_EXISTENTE;
+
+    struct entrada entrados;
+    if(leer_entrada(p_inodo_dir2, &entrados, p_entrada2)!=EXITO) return ERROR_NO_EXISTE_ENTRADA_CONSULTA;
 
     struct inodo in2;
     // Comprobar que es un fichero
-    if (leer_inodo(p_inodo2, &in2) == FALLO) return FALLO;
+    if (leer_inodo(p_inodo2, &in2) == FALLO) return ERROR_NO_EXISTE_ENTRADA_CONSULTA;
     if (in2.tipo != 'f') {
         fprintf(stderr, RED "ERROR: SE ESPERABA UN FICHERO." WHITE); 
         return FALLO;
     }
 
+    //Hasta aqui tot ok
+    
+
     struct entrada nwEntrada;
 
-    strcpy(nwEntrada.nombre, camino2);
+    strcpy(nwEntrada.nombre, entrados.nombre);
     nwEntrada.ninodo=p_inodo1;
+    //strcpy(nwEntrada.nombre, camino1);
+    //nwEntrada.ninodo=p_inodo2;
 
-    if(mi_write_f(p_inodo_dir2, &nwEntrada, p_entrada2 * sizeof(struct entrada), sizeof(struct entrada))<0) return FALLO; // mi_write_f?????????????????????????????
+    if(mi_write_f(p_inodo_dir2, &nwEntrada, p_entrada2 * sizeof(struct entrada), sizeof(struct entrada))<0) return FALLO;
+    
+    liberar_inodo(p_inodo2);
     
     //Actualizar número de links y tiempo del inodo
     in1.nlinks++;
@@ -411,15 +422,18 @@ int mi_link(const char *camino1, const char *camino2) {
     return EXITO;
 }
 
+
+
 int mi_unlink(const char *camino) {
     unsigned int p_inodo_dir = 0, p_inodo = 0, p_entrada = 0;
-
+    
     // Buscar la entrada                                               
     if (buscar_entrada(camino, &p_inodo_dir, &p_inodo, &p_entrada, 0, 0) < 0) return FALLO;
 
     // Comprobar que es un fichero
     struct inodo in;
     if (leer_inodo(p_inodo, &in) == FALLO) return FALLO;
+
     if ((in.tipo != 'f') && (in.tamEnBytesLog>0)) {
         fprintf(stderr, RED "ERROR: SE ESPERABA UN FICHERO." WHITE); 
         return FALLO;
@@ -427,6 +441,7 @@ int mi_unlink(const char *camino) {
     
     struct inodo inDir;
     if (leer_inodo(p_inodo_dir, &inDir) == FALLO) return FALLO;
+
     unsigned int nEntradas=(inDir.tamEnBytesLog/sizeof(struct entrada));
     
     if((nEntradas-1) == p_entrada) {
@@ -436,13 +451,15 @@ int mi_unlink(const char *camino) {
         leer_entrada(p_inodo_dir, &entrada, nEntradas-1);
         //escribir entrada
         if(mi_write_f(p_inodo_dir, &entrada, p_entrada * sizeof(struct entrada), sizeof(struct entrada))<0) return FALLO; 
+        printf("NLINKS1: %d", inDir.nlinks);
         inDir.nlinks--;
+        printf("NLINKS2: %d", inDir.nlinks);
         if(inDir.nlinks==0){
             if(liberar_inodo(p_inodo_dir) == FALLO) return FALLO;
             return EXITO;
         }
         inDir.ctime=time(NULL);
         if(escribir_inodo(p_inodo_dir, &inDir) == FALLO) return FALLO;
-    }
+        }
     return EXITO;
 }
