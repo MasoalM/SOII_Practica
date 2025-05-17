@@ -216,7 +216,7 @@ int calcular_num_entradas(int ninodo_dir, int *n_entradas) {
 void mostrar_error_buscar_entrada(int error) {
     // fprintf(stderr, "Error: %d\n", error);
     switch (error) {
-        case -1: fprintf(stderr, RED "ERROR GENÉRICO POR IMPLEMENTAR\n"WHITE); break;
+        //case -1: fprintf(stderr, RED "ERROR GENÉRICO POR IMPLEMENTAR\n"WHITE); break;
         case -2: fprintf(stderr, RED "Error: Camino incorrecto.\n" WHITE); break;
         case -3: fprintf(stderr, RED "Error: Permiso denegado de lectura.\n" WHITE); break;
         case -4: fprintf(stderr, RED "Error: No existe el archivo o el directorio.\n" WHITE); break;
@@ -319,6 +319,7 @@ int mi_stat(const char *camino, struct STAT *p_stat){
 }
 
 //NIVEL 9
+
 // Nombre: mi_write
 // Utilidad: Esta función escribe contenido en un fichero especificado por la ruta, comenzando desde un offset determinado.
 // Parámetros de entrada:
@@ -429,37 +430,46 @@ int mi_unlink(const char *camino) {
     
     // Buscar la entrada                                               
     if (buscar_entrada(camino, &p_inodo_dir, &p_inodo, &p_entrada, 0, 0) < 0) return FALLO;
+    printf("p-entradaprimeravez= %d", p_entrada);
 
     // Comprobar que es un fichero
     struct inodo in;
     if (leer_inodo(p_inodo, &in) == FALLO) return FALLO;
 
+    printf("NLINKS INPRIMERO: %d", in.nlinks);
     if ((in.tipo != 'f') && (in.tamEnBytesLog>0)) {
-        fprintf(stderr, RED "ERROR: SE ESPERABA UN FICHERO." WHITE); 
+        fprintf(stderr, RED "ERROR: EL DIRECTORIO %s NO ESTÁ VACÍO." WHITE, camino); 
         return FALLO;
     } 
     
     struct inodo inDir;
     if (leer_inodo(p_inodo_dir, &inDir) == FALLO) return FALLO;
 
+
     unsigned int nEntradas=(inDir.tamEnBytesLog/sizeof(struct entrada));
     
+    printf("p-entradasegundavez= %d", p_entrada);
+    printf("nEntradas= %d", nEntradas);
+
     if((nEntradas-1) == p_entrada) {
+        //Es la última entrada
         if(mi_truncar_f(p_inodo_dir, (inDir.tamEnBytesLog-sizeof(struct entrada))) == FALLO) return FALLO;
     } else {
+        //Si no es la última entrada, generamos una nueva
         struct entrada entrada;
-        leer_entrada(p_inodo_dir, &entrada, nEntradas-1);
+        //La leemos
+        if(leer_entrada(p_inodo_dir, &entrada, nEntradas-1)<EXITO) return FALLO;
         //escribir entrada
         if(mi_write_f(p_inodo_dir, &entrada, p_entrada * sizeof(struct entrada), sizeof(struct entrada))<0) return FALLO; 
-        printf("NLINKS1: %d", inDir.nlinks);
-        inDir.nlinks--;
-        printf("NLINKS2: %d", inDir.nlinks);
-        if(inDir.nlinks==0){
-            if(liberar_inodo(p_inodo_dir) == FALLO) return FALLO;
-            return EXITO;
-        }
-        inDir.ctime=time(NULL);
-        if(escribir_inodo(p_inodo_dir, &inDir) == FALLO) return FALLO;
-        }
+        //borramos la última (ya está guardada)
+        if(mi_truncar_f(p_inodo_dir, (inDir.tamEnBytesLog-sizeof(struct entrada))) == FALLO) return FALLO;
+    }
+    inDir.nlinks--;
+    if(inDir.nlinks==0){
+        if(liberar_inodo(p_inodo_dir) == FALLO) return FALLO;
+        return EXITO;
+    }
+    inDir.ctime=time(NULL);
+    if(escribir_inodo(p_inodo_dir, &inDir) == FALLO) return FALLO;
     return EXITO;
 }
