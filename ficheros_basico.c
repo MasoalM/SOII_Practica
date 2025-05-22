@@ -362,6 +362,7 @@ int leer_inodo(unsigned int ninodo, struct inodo *inodo) {
 int reservar_inodo(unsigned char tipo, unsigned char permisos) {
     //declaramos el superbloque
     struct superbloque SB;
+    struct inodo inodo;
     // Leer el superbloque para obtener la localización del array de inodos
     if (bread(posSB, &SB) == FALLO) {
         perror(RED "Error al leer el superbloque");
@@ -376,37 +377,30 @@ int reservar_inodo(unsigned char tipo, unsigned char permisos) {
 
     //guardamos la posición
     unsigned int posInodoReservado = SB.posPrimerInodoLibre;
+    leer_inodo(posInodoReservado, &inodo);
+    SB.posPrimerInodoLibre = inodo.punterosDirectos[0];
+    fprintf(stderr, GREEN NEGRITA "[reservar_inodo()→ Tras reservar inodo: primerInodoLibre=%d]\n", SB.posPrimerInodoLibre);
+
+
     //inicializaciones del inodo
-    struct inodo inodoR;
-    inodoR.permisos = permisos;
-    inodoR.tipo = tipo;
-    inodoR.nlinks = 1;
-    inodoR.tamEnBytesLog = 0;
-    inodoR.atime = time(NULL);
+    inodo.permisos = permisos;
+    inodo.tipo = tipo;
+    inodo.nlinks = 1;
+    inodo.tamEnBytesLog = 0;
+    inodo.atime = time(NULL);
     //printf("A TIME OG:  %t")
-    inodoR.btime = time(NULL);
+    inodo.btime = time(NULL);
     
-    inodoR.ctime = time(NULL);
+    inodo.ctime = time(NULL);
     
-    inodoR.mtime = time(NULL);
+    inodo.mtime = time(NULL);
     //printf("M time: %d", inodoR.mtime);
-    inodoR.numBloquesOcupados = 0;;    memset(inodoR.punterosDirectos, 0, sizeof(inodoR.punterosDirectos));
-    memset(inodoR.punterosIndirectos, 0, sizeof(inodoR.punterosIndirectos));
-
-    // Leer el inodo actual para obtener el enlace al siguiente inodo libre
-    struct inodo tempInodo;
-    if (leer_inodo(posInodoReservado, &tempInodo) == FALLO) {
-        perror("Error al leer el inodo para actualizar la lista enlazada");
-        return FALLO;
-    }
-    //inodoR.punterosDirectos[0]=tempInodo.punterosDirectos[0];
-
-    // Actualizar el primer inodo libre al siguiente en la lista
-    SB.posPrimerInodoLibre = tempInodo.punterosDirectos[0];  // Suponiendo que el primer puntero directo guarda el siguiente inodo libre
+    inodo.numBloquesOcupados = 0;;    memset(inodo.punterosDirectos, 0, sizeof(inodo.punterosDirectos));
+    memset(inodo.punterosIndirectos, 0, sizeof(inodo.punterosIndirectos));
 
 
     //Reservar el primer inodo libre
-    if(escribir_inodo(posInodoReservado, &inodoR)) {
+    if(escribir_inodo(posInodoReservado, &inodo)) {
         perror(RED "Error al escribir el inodo");
         return FALLO;
     }    
@@ -755,6 +749,7 @@ int liberar_inodo(unsigned int ninodo){
 
     inodo.punterosDirectos[0]=SB.posPrimerInodoLibre;
     SB.posPrimerInodoLibre = ninodo;
+    fprintf(stderr, GREEN NEGRITA "[liberar_inodo()→ Tras liberar inodo: primerInodoLibre=%d]\n", SB.posPrimerInodoLibre);
     SB.cantInodosLibres++;
     if(bwrite(posSB, &SB) == FALLO){
         perror("Error al escribir el superbloque");
