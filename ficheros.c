@@ -69,7 +69,7 @@ int mi_read_f(unsigned int ninodo, void *buf_original, unsigned int offset, unsi
 
     // Ajustar nbytes si es necesario para no leer más allá del tamaño del fichero
     if (offset >= inodo.tamEnBytesLog) {
-        return 0;  // No podemos leer nada
+        return EXITO;  // No podemos leer nada
     }
     if ((offset + nbytes) > inodo.tamEnBytesLog) {
         nbytes = inodo.tamEnBytesLog - offset;
@@ -104,6 +104,7 @@ int mi_read_f(unsigned int ninodo, void *buf_original, unsigned int offset, unsi
 
         memcpy(buf_original + totalLeidos, buf_bloque + despInicio, tam);
         totalLeidos += tam;
+        printf("%d", totalLeidos);
     }
 
     // Actualizar el atime del inodo, ya que se ha accedido a los datos
