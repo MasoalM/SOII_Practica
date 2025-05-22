@@ -67,13 +67,19 @@ int mi_read_f(unsigned int ninodo, void *buf_original, unsigned int offset, unsi
         return FALLO;
     }
 
+
+    //printf(BLUE "offset: %d\n" GRAY, offset);
+    //printf(BLUE"tamenBytesLog: %d\n" GRAY, inodo.tamEnBytesLog);
+    //printf(BLUE"nbytes: %d\n" GRAY, nbytes);
+    //printf(BLUE"offset+nbytes: %d\n" GRAY, (offset+nbytes));
     // Ajustar nbytes si es necesario para no leer más allá del tamaño del fichero
     if (offset >= inodo.tamEnBytesLog) {
-        return EXITO;  // No podemos leer nada
+        return 0;  // No podemos leer nada
     }
-    if ((offset + nbytes) > inodo.tamEnBytesLog) {
+    if ((offset + nbytes)> inodo.tamEnBytesLog) {
         nbytes = inodo.tamEnBytesLog - offset;
     }
+    
 
     // Calcular el primer y último bloque lógico donde se leerá
     unsigned int primerBL = offset / BLOCKSIZE;
@@ -104,7 +110,6 @@ int mi_read_f(unsigned int ninodo, void *buf_original, unsigned int offset, unsi
 
         memcpy(buf_original + totalLeidos, buf_bloque + despInicio, tam);
         totalLeidos += tam;
-        printf("%d", totalLeidos);
     }
 
     // Actualizar el atime del inodo, ya que se ha accedido a los datos

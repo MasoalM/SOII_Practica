@@ -379,7 +379,7 @@ int reservar_inodo(unsigned char tipo, unsigned char permisos) {
     unsigned int posInodoReservado = SB.posPrimerInodoLibre;
     leer_inodo(posInodoReservado, &inodo);
     SB.posPrimerInodoLibre = inodo.punterosDirectos[0];
-    fprintf(stderr, GREEN NEGRITA "[reservar_inodo()→ Tras reservar inodo: primerInodoLibre=%d]\n", SB.posPrimerInodoLibre);
+    //fprintf(stderr, GREEN NEGRITA "[reservar_inodo()→ Tras reservar inodo: primerInodoLibre=%d]\n", SB.posPrimerInodoLibre);
 
 
     //inicializaciones del inodo

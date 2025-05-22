@@ -73,7 +73,7 @@ int buscar_entrada(const char *camino_parcial, unsigned int *p_inodo_dir, unsign
         return ERROR_CAMINO_INCORRECTO;
     }
     
-    printf(GRAY "[buscar_entrada()→ inicial: %s, final: %s, reservar: %d]\n" WHITE , inicial, final, reservar);
+    //printf(GRAY "[buscar_entrada()→ inicial: %s, final: %s, reservar: %d]\n" WHITE , inicial, final, reservar);
 
     // Leer el inodo del directorio actual
     if (leer_inodo(*p_inodo_dir, &inodo_dir) < 0) {
@@ -128,13 +128,13 @@ int buscar_entrada(const char *camino_parcial, unsigned int *p_inodo_dir, unsign
         if (tipo == 'd') {
             if (strcmp(final, "/") == 0) {
                 entrada.ninodo = reservar_inodo('d', permisos);
-                printf(GRAY "[buscar_entrada()→ reservado inodo %d tipo d con permisos %d para %s]\n" WHITE , entrada.ninodo, permisos, inicial);
+                //printf(GRAY "[buscar_entrada()→ reservado inodo %d tipo d con permisos %d para %s]\n" WHITE , entrada.ninodo, permisos, inicial);
             } else {
                 return ERROR_NO_EXISTE_DIRECTORIO_INTERMEDIO;
             }
         } else {
             entrada.ninodo = reservar_inodo('f', permisos);
-            printf(GRAY "[buscar_entrada()→ reservado inodo %d tipo f con permisos %d para %s]\n" WHITE , entrada.ninodo, permisos, inicial);
+            //printf(GRAY "[buscar_entrada()→ reservado inodo %d tipo f con permisos %d para %s]\n" WHITE , entrada.ninodo, permisos, inicial);
         }
 
         if (entrada.ninodo < 0) return FALLO;
@@ -144,7 +144,7 @@ int buscar_entrada(const char *camino_parcial, unsigned int *p_inodo_dir, unsign
             liberar_inodo(entrada.ninodo);
             return FALLO;
         } else {
-            printf(GRAY "[buscar_entrada()→ creada entrada: %s, %d]\n" WHITE , inicial, entrada.ninodo);
+            //printf(GRAY "[buscar_entrada()→ creada entrada: %s, %d]\n" WHITE , inicial, entrada.ninodo);
         }
 
         //num_entrada_inodo = cant_entradas_inodo; // última entrada añadida

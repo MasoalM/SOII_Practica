@@ -113,9 +113,6 @@ echo -e "\x1B[38;2;17;245;120m$ ./mi_escribir  disco /dir1/dir11/fic111 \"$(cat 
 echo -e "\x1B[38;2;17;245;120m#reservaremos 5 bloques de datos (3 escritos completos y 2 parciales)\x1b[0m"
 ./mi_escribir  disco /dir1/dir11/fic111 "$(cat texto2.txt)" 0
 echo
-echo -e "\x1B[38;2;17;245;120m$ ./mi_ls  disco /dir1/dir11/fic111 #eliminar comando si no se ha implementado mi_ls para ficheros\x1b[0m"
-./mi_ls disco /dir1/dir11/fic111 #eliminar comando si no se ha implementado mi_ls para ficheros
-echo
 echo -e "\x1B[38;2;17;245;120m$ ./leer_sf disco\x1b[0m"
 ./leer_sf disco
 echo
