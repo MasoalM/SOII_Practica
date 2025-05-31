@@ -1,7 +1,27 @@
 #include "bloques.h"
+#include "semaforo_mutex_posix.h"
+
+static sem_t *mutex;
 
 // Variable global que almacena el descriptor de un dispositivo virtual
 static int descriptor = 0;
+
+static unsigned int inside_sc = 0;
+
+void mi_waitSem() {
+    if (!inside_sc) { // inside_sc==0, no se ha hecho ya un wait
+      waitSem(mutex);
+    }
+    inside_sc++;
+}
+
+void mi_signalSem() {
+    inside_sc--;
+    if (!inside_sc) {
+        signalSem(mutex);
+    }
+}
+
 
 // Nombre: bmount
 // Utilidad: Función que monta y abre el dispositivo virtual
@@ -9,12 +29,25 @@ static int descriptor = 0;
 // Salida: Devuelve -1 (FALLO) en caso de error y el descriptor de la opertura en caso de éxito
 // Dónde se utiliza: Main de mi_mkfs
 int bmount(const char *camino) {
+    
+    if(descriptor>0){
+        close(descriptor);
+    }
+    if (!mutex) { // el semáforo es único en el sistema y sólo se ha de inicializar 1 vez (padre)
+        mutex = initSem(); 
+        if (mutex == SEM_FAILED) {
+            return FALLO;
+        }
+    }
+
     umask(000);
     descriptor = open(camino, O_CREAT | O_RDWR, 0666);
-    if(descriptor == FALLO) {
-        perror(RED "Error al abrir la ruta");
+    if(descriptor==FALLO) {
         return FALLO;
     }
+    
+    
+    
     return descriptor;
 }
 
@@ -24,11 +57,13 @@ int bmount(const char *camino) {
 // Salida: Devuelve -1 (FALLO) en caso de error y 0 (EXITO) en caso de cierre exitoso
 // Dónde se utiliza: Main de mi_mkfs
 int bumount() {
+    
     int cierre = close(descriptor);
     if(cierre == FALLO) {
-        perror(RED "Error al cerrar la ruta");
+        perror(RED "Error al cerrar la ruta"); 
         return FALLO;
     }
+    deleteSem(); 
     return EXITO;
 }
 

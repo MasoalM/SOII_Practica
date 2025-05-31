@@ -38,7 +38,7 @@ int main(int argc, char **argv) {
     tm = localtime(&stat.ctime);
     strftime(ctime, 80, "%a %Y-%m-%d %H:%M:%S", tm);
 
-    tm = localtime(&stat.ctime);  // En sistemas reales sería btime, pero usamos ctime
+    tm = localtime(&stat.btime);  // En sistemas reales sería btime, pero usamos ctime
     strftime(btime, 80, "%a %Y-%m-%d %H:%M:%S", tm);
 
     // Mostrar metadatos
