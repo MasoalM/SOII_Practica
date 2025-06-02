@@ -13,7 +13,7 @@ void reaper(int signum) {
     }
 }
 
-// Función para dormir en milisegundos, reanudando tras señal
+/* // Función para dormir en milisegundos, reanudando tras señal
 void my_sleep(unsigned msec) {
     struct timespec req, rem;
     int err;
@@ -27,7 +27,7 @@ void my_sleep(unsigned msec) {
             req = rem;
         }
     }
-}
+} */
 
 int main(int argc, char **argv) {
     if (argc != 2) {
@@ -51,7 +51,7 @@ int main(int argc, char **argv) {
     struct tm *t = localtime(&now);
     char simul_dir[256];
     snprintf(simul_dir, sizeof(simul_dir),
-             "/simul_%04d%02d%02d%02d%02d%02d",
+             "/simul_%04d%02d%02d%02d%02d%02d/",
              t->tm_year + 1900, t->tm_mon + 1, t->tm_mday,
              t->tm_hour, t->tm_min, t->tm_sec);
 
@@ -61,7 +61,7 @@ int main(int argc, char **argv) {
         fprintf(stderr, "Error creando directorio simulación\n");
         if(bumount()==FALLO) return FALLO;
         exit(EXIT_FAILURE);
-    }
+    } else fprintf(stderr, ROSE "Directorio simulación: %s\n" RESET, simul_dir);
 
     for (int i = 0; i < NUMPROCESOS; i++) {
         pid_t pid = fork();
@@ -77,7 +77,8 @@ int main(int argc, char **argv) {
             }
 
             char proceso_dir[300];
-            snprintf(proceso_dir, sizeof(proceso_dir), "%s/proceso_%d", simul_dir, getpid());
+            snprintf(proceso_dir, sizeof(proceso_dir), "%sproceso_%d/", simul_dir, getpid());
+            fprintf(stderr, "poceso_dir: %s\n", proceso_dir);
 
             if (mi_creat(proceso_dir, 7) == FALLO) {
                 fprintf(stderr, "[Proceso %d] Error creando directorio proceso\n", getpid());
@@ -86,7 +87,7 @@ int main(int argc, char **argv) {
             }
 
             char fichero_prueba[350];
-            snprintf(fichero_prueba, sizeof(fichero_prueba), "%s/prueba.dat", proceso_dir);
+            snprintf(fichero_prueba, sizeof(fichero_prueba), "%sprueba.dat", proceso_dir);
 
             if (mi_creat(fichero_prueba, 6) == FALLO) {  // permisos 6: lectura + escritura
                 fprintf(stderr, "[Proceso %d] Error creando fichero prueba.dat\n", getpid());
@@ -112,7 +113,7 @@ int main(int argc, char **argv) {
                     exit(EXIT_FAILURE);
                 }
 
-                printf("[simulación.c → Escritura %d en %s]\n", nescritura, fichero_prueba);
+                //printf("[simulación.c → Escritura %d en %s]\n", nescritura, fichero_prueba);
 
                 usleep(50000); // 0.05 segundos
             }
