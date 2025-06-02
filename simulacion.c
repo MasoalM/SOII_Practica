@@ -78,7 +78,7 @@ int main(int argc, char **argv) {
 
             char proceso_dir[300];
             snprintf(proceso_dir, sizeof(proceso_dir), "%sproceso_%d/", simul_dir, getpid());
-            fprintf(stderr, "poceso_dir: %s\n", proceso_dir);
+            fprintf(stderr, "proceso_dir: %s\n", proceso_dir);
 
             if (mi_creat(proceso_dir, 7) == FALLO) {
                 fprintf(stderr, "[Proceso %d] Error creando directorio proceso\n", getpid());

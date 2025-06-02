@@ -46,8 +46,6 @@ int bmount(const char *camino) {
         return FALLO;
     }
     
-    
-    
     return descriptor;
 }
 
