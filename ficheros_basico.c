@@ -133,8 +133,7 @@ int initMB() {
     }
 
     return EXITO;
-}
-
+} 
 
 // Nombre: initAI
 // Utilidad: Función que inicializa el array de inodos
@@ -183,31 +182,30 @@ int initAI() {
 // Parámetros de entrada: nbloque (número de bloque), bit (valor a escribir (0 o 1))
 // Salida: -1 en caso de fallo, 0 en caso de éxito
 int escribir_bit(unsigned int nbloque, unsigned int bit){
-
-    //declaraciones
-    struct superbloque SB; //superbloque
-    if(bread(posSB, &SB) == FALLO) return FALLO;
-    unsigned int posByte = nbloque/8;
-    unsigned int posBit = nbloque%8;
-    unsigned int nbloqueMB = posByte / BLOCKSIZE;
-    unsigned int nbloqueabs = SB.posPrimerBloqueMB + nbloqueMB;
     unsigned char bufferMB[BLOCKSIZE];
+    struct superbloque SB;
 
-    //tratamiento
-    posByte = posByte % BLOCKSIZE;
-    if(bread(SB.posPrimerBloqueMB,bufferMB) == FALLO) return FALLO;
+    if (bread(posSB, &SB) == -1) return FALLO;
+
+    unsigned int posbyte = nbloque / 8;
+    unsigned int posbit = nbloque % 8;
+    unsigned int nbloqueMB = posbyte / BLOCKSIZE;
+    if (bread(SB.posPrimerBloqueMB + nbloqueMB, bufferMB) == -1) return FALLO;
+
+    posbyte = posbyte % BLOCKSIZE; // ajustamos posbyte para obtener una dirección < BLOCKSIZE
+
     unsigned char mascara = 128; // 10000000
-    mascara >>= posBit; // desplazamiento de bits a la derecha
-    if(bit == 1){
-        bufferMB[posByte] |= mascara; //poner a 1 el bit indicado 
+    mascara >>= posbit;          // desplazamiento de bits a la derecha
+    if (bit) {
+        bufferMB[posbyte] |= mascara; //  operador OR para bits
     } else {
-        bufferMB[posByte] &= ~mascara; //poner a 0 el bit indicado
+        bufferMB[posbyte] &= ~mascara; // operadores AND y NOT para bits
     }
 
-    //resultado
-    if(bwrite(nbloqueabs, bufferMB) == FALLO) return FALLO;
+    if (bwrite(SB.posPrimerBloqueMB + nbloqueMB, bufferMB) == -1) return FALLO;
+
     return EXITO;
-}
+}  
 
 
 // Nombre: leer_bit
@@ -279,7 +277,7 @@ int reservar_bloque(){
     while (bufferMB[posbyte] & mascara) { // operador AND para bits
         bufferMB[posbyte] <<= 1;          // desplazamiento de bits a la izquierda
         posbit++;
-    }
+    } 
 
     //paso 4
     //finalizamos
@@ -410,9 +408,11 @@ int reservar_inodo(unsigned char tipo, unsigned char permisos) {
         perror(RED "Error al escribir el superbloque");
         return FALLO;
     }
-
     return posInodoReservado;
 }
+ 
+
+
 
 
 //
