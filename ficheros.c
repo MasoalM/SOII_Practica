@@ -78,80 +78,6 @@ int mi_write_f(unsigned int ninodo, const void *buf_original, unsigned int offse
     mi_signalSem();
     return bytesEscritos;
 }
-/*
-int mi_read_f(unsigned int ninodo, void *buf_original, unsigned int offset, unsigned int nbytes) {
-    struct inodo inodo;
-    mi_waitSem();
-    if (leer_inodo(ninodo, &inodo) == FALLO) {
-        mi_signalSem();
-        perror("Error al leer inodo");
-        return FALLO;
-    }
-    
-    // Comprobar permisos de lectura
-    if ((inodo.permisos & 4) != 4) {
-        mi_signalSem();
-        fprintf(stderr, "No hay permisos de lectura\n");
-        return FALLO;
-    }
-    
-    //printf(BLUE "offset: %d\n" GRAY, offset);
-    //printf(BLUE"tamenBytesLog: %d\n" GRAY, inodo.tamEnBytesLog);
-    //printf(BLUE"nbytes: %d\n" GRAY, nbytes);
-    //printf(BLUE"offset+nbytes: %d\n" GRAY, (offset+nbytes));
-    // Ajustar nbytes si es necesario para no leer más allá del tamaño del fichero
-    if (offset >= inodo.tamEnBytesLog) {
-        mi_signalSem();
-        return EXITO;  // No podemos leer nada
-    }
-    if ((offset + nbytes)> inodo.tamEnBytesLog) {
-        nbytes = inodo.tamEnBytesLog - offset;
-    }
-    
-
-    // Calcular el primer y último bloque lógico donde se leerá
-    unsigned int primerBL = offset / BLOCKSIZE;
-    unsigned int ultimoBL = (offset + nbytes - 1) / BLOCKSIZE;
-    unsigned int desp1 = offset % BLOCKSIZE;
-    unsigned int desp2 = (offset + nbytes - 1) % BLOCKSIZE;
-
-    char buf_bloque[BLOCKSIZE];
-    //int bytesLeidos = 0;
-    int totalLeidos = 0;
-
-    for (unsigned int bl = primerBL; bl <= ultimoBL; bl++) {
-        int nbfisico = traducir_bloque_inodo(ninodo, bl, 0);  // No reservar bloques
-        if (nbfisico == -1) {
-            // Si no hay bloque físico, asumimos que el bloque está lleno de ceros
-            memset(buf_bloque, 0, BLOCKSIZE);
-        } else {
-            if (bread(nbfisico, buf_bloque) == FALLO) {
-                mi_signalSem();
-                perror("Error al leer el bloque físico");
-                return FALLO;
-            }
-        }
-
-        // Copiar los datos del bloque a buf_original
-        int despInicio = (bl == primerBL) ? desp1 : 0;
-        int despFin = (bl == ultimoBL) ? desp2 : BLOCKSIZE - 1;
-        int tam = despFin - despInicio + 1;
-
-        memcpy(buf_original + totalLeidos, buf_bloque + despInicio, tam);
-        totalLeidos += tam;
-    }
-
-    // Actualizar el atime del inodo, ya que se ha accedido a los datos
-    inodo.atime = time(NULL);
-    if (escribir_inodo(ninodo, &inodo) == FALLO) {
-        mi_signalSem();
-        perror("Error al actualizar el inodo");
-        return FALLO;
-    }
-    mi_signalSem();
-    return totalLeidos;
-}
-*/
 
 int mi_read_f(unsigned int ninodo, void *buf_original, unsigned int offset, unsigned int nbytes) {
     struct inodo inodo;
@@ -319,10 +245,6 @@ int mi_truncar_f(unsigned int ninodo, unsigned int nbytes){
 
     // Actualizar el tamaño lógico del fichero
     inodo.tamEnBytesLog = nbytes;
-
-    //for(int i = nbytes; i > 0; i--){
-    //    inodo.tamEnBytesLog--;
-    //}
     inodo.numBloquesOcupados-=liberados;
 
     
