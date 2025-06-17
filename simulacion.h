@@ -1,3 +1,11 @@
+/*
+AUTORES
+Joan Matemalas Rosselló
+Marcos Socías Alberto
+Sergi Villalonga Gamundí
+*/
+
+
 #ifndef SIMULACION_H
 #define SIMULACION_H
 

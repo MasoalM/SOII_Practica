@@ -1,3 +1,11 @@
+/*
+AUTORES
+Joan Matemalas Rosselló
+Marcos Socías Alberto
+Sergi Villalonga Gamundí
+*/
+
+
 // simulacion.c
 
 #include "simulacion.h"
@@ -46,6 +54,8 @@ int main(int argc, char **argv) {
         exit(EXIT_FAILURE);
     }
 
+    printf("*** SIMULACIÓN DE 100 PROCESOS REALIZANDO CADA UNO 50 ESCRITURAS ***\n");
+
     // Crear directorio simul_yyyymmddhhmmss
     time_t now = time(NULL);
     struct tm *t = localtime(&now);
@@ -78,7 +88,7 @@ int main(int argc, char **argv) {
 
             char proceso_dir[300];
             snprintf(proceso_dir, sizeof(proceso_dir), "%sproceso_%d/", simul_dir, getpid());
-            fprintf(stderr, "proceso_dir: %s\n", proceso_dir);
+            //fprintf(stderr, "proceso_dir: %s\n", proceso_dir);
 
             if (mi_creat(proceso_dir, 7) == FALLO) {
                 fprintf(stderr, "[Proceso %d] Error creando directorio proceso\n", getpid());
@@ -118,7 +128,7 @@ int main(int argc, char **argv) {
                 usleep(50000); // 0.05 segundos
             }
 
-            printf("[Proceso %d: Completadas %d escrituras en %s]\n", getpid(), NUMESCRITURAS, fichero_prueba);
+            printf("[Proceso %d: Completadas %d escrituras en %s]\n", (i+1), NUMESCRITURAS, fichero_prueba);
 
             if(bumount()==FALLO) return FALLO;
 
